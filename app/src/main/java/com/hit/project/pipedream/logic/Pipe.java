@@ -1,6 +1,5 @@
 package com.hit.project.pipedream.logic;
 
-import android.content.Intent;
 import android.graphics.Point;
 
 import java.util.HashMap;
@@ -23,10 +22,10 @@ public class Pipe extends Observable{
     PipeType _pipeType;
 
     /* start directions */
-    private static final int DIRECTION_UP = 1;
-    private static final int DIRECTION_DOWN = 2;
-    private static final int DIRECTION_LEFT = 4;
-    private static final int DIRECTION_RIGHT = 8;
+    public static final int DIRECTION_UP = 1;
+    public static final int DIRECTION_DOWN = 2;
+    public static final int DIRECTION_LEFT = 4;
+    public static final int DIRECTION_RIGHT = 8;
     /* end directions */
 
     /* Pipe directions */
@@ -50,11 +49,10 @@ public class Pipe extends Observable{
         _pipeType = pipeDirection;
     }
 
-    public void addNeighborPipe(Pipe neighbor) {
-        int neighborDirection = getNeighborDirection(neighbor);
+    public void addNeighborPipe(Pipe neighbor,int relativeDirection) {
         Integer neighborAvailableDirections = AvailableDirections.get(neighbor._pipeType);
         Integer thisAvailableDirections = AvailableDirections.get(_pipeType);
-        switch (neighborDirection)
+        switch (relativeDirection)
         {
             case DIRECTION_UP:
                 if ( ((thisAvailableDirections & DIRECTION_UP) == 0) || ((neighborAvailableDirections & DIRECTION_DOWN) == 0) )
@@ -124,7 +122,7 @@ public class Pipe extends Observable{
 
     public boolean isRemovable()
     {
-        return _flowStarted;
+        return _flowStarted == false;
     }
 
     @Override
@@ -147,35 +145,4 @@ public class Pipe extends Observable{
         // Compare the data members and return accordingly
         return _position.equals(((Pipe) o)._position);
     }
-
-    private int getNeighborDirection(Pipe neighbor)
-    {
-        if (_position.y == neighbor._position.y)
-        {
-            if (_position.x > neighbor._position.x)
-            {
-                //neighbor position is on the left
-                return DIRECTION_LEFT;
-            } else if (_position.x < neighbor._position.x)
-            {
-                //neighbor position is on the right
-                return DIRECTION_RIGHT;
-            }
-        }
-        if (_position.x == neighbor._position.x)
-        {
-            if (_position.y < neighbor._position.y)
-            {
-                //neighbor position is above
-                return DIRECTION_UP;
-            } else if (_position.y > neighbor._position.y)
-            {
-                //neighbor position is below
-                return DIRECTION_DOWN;
-            }
-        }
-        //neighbor position is invalid
-        return -1;
-    }
-
 }
