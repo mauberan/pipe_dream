@@ -102,7 +102,22 @@ public class GameBoard implements Observer {
 
     @Override
     public void update(Observable observable, Object o) {
+        if (!(observable instanceof Pipe) || !(o instanceof Pipe.FlowStatus))
+        {
+            return;
+        }
+        Pipe pipe = (Pipe)observable;
+        Pipe.FlowStatus status = (Pipe.FlowStatus)o;
         //update score
         _score += SCORE_PER_PIPE;
+        //print debug information
+        System.out.println(String.format("Position:%s pipe type:%s score:%s",pipe.getPosition(),pipe.getPipeType(),_score));
+        if (status == Pipe.FlowStatus.END_OF_PIPE)
+        {
+            System.out.println("reached to the end of the pipe!");
+        } else if (status == Pipe.FlowStatus.FOUND_NEXT_PIPE)
+        {
+            System.out.println("found the next linked pipe!");
+        }
     }
 }

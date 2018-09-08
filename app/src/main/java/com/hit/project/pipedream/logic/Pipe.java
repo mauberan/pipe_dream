@@ -10,8 +10,23 @@ import java.util.TimerTask;
 
 public class Pipe extends Observable{
 
-    public enum PipeType {TOP_LEFT,TOP_RIGHT,
-        BOTTOM_LEFT,BOTTOM_RIGHT,CROSS,HORIZONTAL,VERTICAL}
+    public enum PipeType {TOP_LEFT("Top Left Pipe"),TOP_RIGHT("Top Right Pipe"),
+        BOTTOM_LEFT("Bottom Left Pipe"),BOTTOM_RIGHT("Bottom Right Pipe"),
+        CROSS("Cross Pipe"),HORIZONTAL("Horizontal Pipe"),VERTICAL("Vertical Pipe");
+
+        private String _enumStr;
+        PipeType(String enumStr)
+        {
+            this._enumStr = enumStr;
+        }
+
+        @Override
+        public String toString() {
+            return _enumStr;
+        }
+    }
+
+    public enum FlowStatus {FOUND_NEXT_PIPE,END_OF_PIPE}
 
     private boolean _flowStarted;
     private List<Pipe>  _connectedPipes;
@@ -109,12 +124,20 @@ public class Pipe extends Observable{
     {
         //update game board (to increase score...)
         setChanged();
-        notifyObservers(_position);
         //go over the list of neighbors and start flow for each one of them
-        for (Pipe neighborPipe : _connectedPipes)
+        if (_connectedPipes.isEmpty())
         {
-            //TODO:verify that this function is not blocking (we might have more than one neighbor)
-            neighborPipe.startFlow();
+            //no more linked pipes! end current game
+            notifyObservers(FlowStatus.END_OF_PIPE);
+
+        } else {
+            //start flow in the next pipe
+            notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+            for (Pipe neighborPipe : _connectedPipes)
+            {
+                //TODO:verify that this function is not blocking (we might have more than one neighbor)
+                neighborPipe.startFlow();
+            }
         }
     }
 
@@ -142,5 +165,15 @@ public class Pipe extends Observable{
 
         // Compare the data members and return accordingly
         return (p._position.y == _position.y) && (p._position.x == _position.x);
+    }
+
+    public Point getPosition()
+    {
+        return _position;
+    }
+
+    public PipeType getPipeType()
+    {
+        return _pipeType;
     }
 }
