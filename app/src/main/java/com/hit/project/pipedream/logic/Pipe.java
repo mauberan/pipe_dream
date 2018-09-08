@@ -1,7 +1,5 @@
 package com.hit.project.pipedream.logic;
 
-import android.graphics.Point;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -55,25 +53,25 @@ public class Pipe extends Observable{
         switch (relativeDirection)
         {
             case DIRECTION_UP:
-                if ( ((thisAvailableDirections & DIRECTION_UP) == 0) || ((neighborAvailableDirections & DIRECTION_DOWN) == 0) )
+                if ( ((thisAvailableDirections & DIRECTION_UP) == 0) && ((neighborAvailableDirections & DIRECTION_DOWN) == 0) )
                 {
                     return;
                 }
                 break;
             case DIRECTION_DOWN:
-                if ( ((thisAvailableDirections & DIRECTION_DOWN) == 0) || ((neighborAvailableDirections & DIRECTION_UP) == 0) )
+                if ( ((thisAvailableDirections & DIRECTION_DOWN) == 0) && ((neighborAvailableDirections & DIRECTION_UP) == 0) )
                 {
                     return;
                 }
                 break;
             case  DIRECTION_LEFT:
-                if ( ((thisAvailableDirections & DIRECTION_LEFT) == 0) || ((neighborAvailableDirections & DIRECTION_RIGHT) == 0) )
+                if ( ((thisAvailableDirections & DIRECTION_LEFT) == 0) && ((neighborAvailableDirections & DIRECTION_RIGHT) == 0) )
                 {
                     return;
                 }
                 break;
             case DIRECTION_RIGHT:
-                if ( ((thisAvailableDirections & DIRECTION_RIGHT) == 0) || ((neighborAvailableDirections & DIRECTION_LEFT) == 0) )
+                if ( ((thisAvailableDirections & DIRECTION_RIGHT) == 0) && ((neighborAvailableDirections & DIRECTION_LEFT) == 0) )
                 {
                     return;
                 }
@@ -111,7 +109,7 @@ public class Pipe extends Observable{
     {
         //update game board (to increase score...)
         setChanged();
-        notifyObservers();
+        notifyObservers(_position);
         //go over the list of neighbors and start flow for each one of them
         for (Pipe neighborPipe : _connectedPipes)
         {
@@ -143,6 +141,6 @@ public class Pipe extends Observable{
         Pipe p = (Pipe) o;
 
         // Compare the data members and return accordingly
-        return _position.equals(((Pipe) o)._position);
+        return (p._position.y == _position.y) && (p._position.x == _position.x);
     }
 }

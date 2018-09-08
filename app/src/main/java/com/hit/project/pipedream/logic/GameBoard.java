@@ -1,7 +1,5 @@
 package com.hit.project.pipedream.logic;
 
-import android.graphics.Point;
-
 import java.util.Observable;
 import java.util.Observer;
 
@@ -22,6 +20,17 @@ public class GameBoard implements Observer {
         _score = 0;
     }
 
+    public void startGame(Point firstPipePosition)
+    {
+        Pipe firstPipe = _board[firstPipePosition.x][firstPipePosition.y];
+        if (firstPipe == null)
+        {
+            //invalid starting point!
+            return;
+        }
+        firstPipe.startFlow();
+    }
+
     public int getScore()
     {
         return _score;
@@ -30,36 +39,38 @@ public class GameBoard implements Observer {
     public boolean addPipeToBoard(Point position, Pipe.PipeType pipeType)
     {
         //check if pipe already exists in this position
-        Pipe pipe = _board[position.x][position.y];
-        if ((pipe != null) && (!pipe.isRemovable()))
+        Pipe oldPipe = _board[position.x][position.y];
+        if ((oldPipe != null) && (!oldPipe.isRemovable()))
         {
             //pipe exists and cannot be removed
             return false;
         }
         //create new pipe
         Pipe newPipe = new Pipe(TIME_TO_FULL_CAPACITY_SECONDS,position,pipeType);
+        //add new pipe to board
+        _board[position.x][position.y] = newPipe;
         //add game board as observer to get updated when the pipe is full
         newPipe.addObserver(this);
         //remove pipe from board and update neighbors
         if (position.x > 0)
         {
             //update left neighbor
-            updateNeighbor(new Point(position.x - 1,position.y),newPipe,pipe,Pipe.DIRECTION_RIGHT);
+            updateNeighbor(new Point(position.x - 1,position.y),newPipe,oldPipe,Pipe.DIRECTION_RIGHT);
         }
         if (position.x < (_rowColumnSize-1))
         {
             //update right neighbor
-            updateNeighbor(new Point(position.x + 1,position.y),newPipe,pipe,Pipe.DIRECTION_LEFT);
+            updateNeighbor(new Point(position.x + 1,position.y),newPipe,oldPipe,Pipe.DIRECTION_LEFT);
         }
         if (position.y > 0)
         {
             //update bottom neighbor
-            updateNeighbor(new Point(position.x,position.y-1),newPipe,pipe,Pipe.DIRECTION_UP);
+            updateNeighbor(new Point(position.x,position.y-1),newPipe,oldPipe,Pipe.DIRECTION_UP);
         }
         if (position.y < (_rowColumnSize-1))
         {
             //update top neighbor
-            updateNeighbor(new Point(position.x,position.y+1),newPipe,pipe,Pipe.DIRECTION_DOWN);
+            updateNeighbor(new Point(position.x,position.y+1),newPipe,oldPipe,Pipe.DIRECTION_DOWN);
         }
         return true;
     }
