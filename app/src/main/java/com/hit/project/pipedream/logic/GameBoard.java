@@ -20,7 +20,7 @@ public class GameBoard implements Observer {
         _score = 0;
     }
 
-    public void startGame(Point firstPipePosition)
+    public void startGame(Point firstPipePosition,Pipe.Directions flowDirection)
     {
         Pipe firstPipe = _board[firstPipePosition.x][firstPipePosition.y];
         if (firstPipe == null)
@@ -28,7 +28,7 @@ public class GameBoard implements Observer {
             //invalid starting point!
             return;
         }
-        firstPipe.startFlow();
+        firstPipe.startFlow(flowDirection);
     }
 
     public int getScore()
@@ -55,27 +55,27 @@ public class GameBoard implements Observer {
         if (position.x > 0)
         {
             //update left neighbor
-            updateNeighbor(new Point(position.x - 1,position.y),newPipe,oldPipe,Pipe.DIRECTION_RIGHT);
+            updateNeighbor(new Point(position.x - 1,position.y),newPipe,oldPipe,Pipe.Directions.RIGHT);
         }
         if (position.x < (_rowColumnSize-1))
         {
             //update right neighbor
-            updateNeighbor(new Point(position.x + 1,position.y),newPipe,oldPipe,Pipe.DIRECTION_LEFT);
+            updateNeighbor(new Point(position.x + 1,position.y),newPipe,oldPipe,Pipe.Directions.LEFT);
         }
         if (position.y > 0)
         {
             //update bottom neighbor
-            updateNeighbor(new Point(position.x,position.y-1),newPipe,oldPipe,Pipe.DIRECTION_UP);
+            updateNeighbor(new Point(position.x,position.y-1),newPipe,oldPipe,Pipe.Directions.UP);
         }
         if (position.y < (_rowColumnSize-1))
         {
             //update top neighbor
-            updateNeighbor(new Point(position.x,position.y+1),newPipe,oldPipe,Pipe.DIRECTION_DOWN);
+            updateNeighbor(new Point(position.x,position.y+1),newPipe,oldPipe,Pipe.Directions.DOWN);
         }
         return true;
     }
 
-    private void updateNeighbor(Point position,Pipe newPipe,Pipe oldPipe,int relativeDirection)
+    private void updateNeighbor(Point position,Pipe newPipe,Pipe oldPipe,Pipe.Directions relativeDirection)
     {
         //get pipe by position
         Pipe neighborToUpdate = _board[position.x][position.y];
@@ -108,16 +108,21 @@ public class GameBoard implements Observer {
         }
         Pipe pipe = (Pipe)observable;
         Pipe.FlowStatus status = (Pipe.FlowStatus)o;
-        //update score
-        _score += SCORE_PER_PIPE;
-        //print debug information
-        System.out.println(String.format("Position:%s pipe type:%s score:%s",pipe.getPosition(),pipe.getPipeType(),_score));
-        if (status == Pipe.FlowStatus.END_OF_PIPE)
+        switch (status)
         {
-            System.out.println("reached to the end of the pipe!");
-        } else if (status == Pipe.FlowStatus.FOUND_NEXT_PIPE)
-        {
-            System.out.println("found the next linked pipe!");
+            case FLOW_STARTED_IN_PIPE:
+                //print debug information
+                System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),_score,pipe.getFlowDirection()));
+                break;
+            case FOUND_NEXT_PIPE:
+                System.out.println("Pipe is full, found the next linked pipe!");
+                //update score
+                _score += SCORE_PER_PIPE;
+                break;
+            case END_OF_PIPE:
+                System.out.println("Pipe is full, reached to the end of the pipe!");
+                break;
+                default:
         }
     }
 }
