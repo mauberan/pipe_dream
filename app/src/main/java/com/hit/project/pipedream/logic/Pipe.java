@@ -65,14 +65,14 @@ public class Pipe extends Observable{
     public enum FlowStatus {FOUND_NEXT_PIPE,END_OF_PIPE,FLOW_STARTED_IN_PIPE}
 
     private boolean _flowStarted;
-    private List<Pipe>  _connectedPipes;
+    private Map<Directions, Pipe>  _connectedPipes;
     private int _timeToFullCapacityInSeconds;
     private Point _position;
     PipeType _pipeType;
     Directions _flowDirection;
 
     /* Pipe directions */
-    Map<PipeType, Integer> AvailableDirections = new HashMap<PipeType, Integer>() {{
+    public static final Map<PipeType, Integer> AvailableDirections = new HashMap<PipeType, Integer>() {{
         put(PipeType.TOP_LEFT, Directions.LEFT.getVal() | Directions.UP.getVal());
         put(PipeType.TOP_RIGHT, Directions.UP.getVal() | Directions.RIGHT.getVal());
         put(PipeType.BOTTOM_LEFT, Directions.DOWN.getVal() | Directions.LEFT.getVal());
@@ -86,7 +86,7 @@ public class Pipe extends Observable{
     public Pipe(int timeToFullCapacityInSeconds, Point position, PipeType pipeDirection)
     {
         _flowStarted = false;
-        _connectedPipes = new ArrayList<>();
+        _connectedPipes = new HashMap<>();
         _position = position;
         _timeToFullCapacityInSeconds = timeToFullCapacityInSeconds;
         _pipeType = pipeDirection;
@@ -99,25 +99,25 @@ public class Pipe extends Observable{
         switch (relativeDirection)
         {
             case UP:
-                if ( ((thisAvailableDirections & Directions.UP.getVal()) == 0) && ((neighborAvailableDirections & Directions.DOWN.getVal()) == 0) )
+                if ( ((thisAvailableDirections & Directions.UP.getVal()) == 0) || ((neighborAvailableDirections & Directions.DOWN.getVal()) == 0) )
                 {
                     return;
                 }
                 break;
             case DOWN:
-                if ( ((thisAvailableDirections & Directions.DOWN.getVal()) == 0) && ((neighborAvailableDirections & Directions.UP.getVal()) == 0) )
+                if ( ((thisAvailableDirections & Directions.DOWN.getVal()) == 0) || ((neighborAvailableDirections & Directions.UP.getVal()) == 0) )
                 {
                     return;
                 }
                 break;
             case  LEFT:
-                if ( ((thisAvailableDirections & Directions.LEFT.getVal()) == 0) && ((neighborAvailableDirections & Directions.RIGHT.getVal()) == 0) )
+                if ( ((thisAvailableDirections & Directions.LEFT.getVal()) == 0) || ((neighborAvailableDirections & Directions.RIGHT.getVal()) == 0) )
                 {
                     return;
                 }
                 break;
             case RIGHT:
-                if ( ((thisAvailableDirections & Directions.RIGHT.getVal()) == 0) && ((neighborAvailableDirections & Directions.LEFT.getVal()) == 0) )
+                if ( ((thisAvailableDirections & Directions.RIGHT.getVal()) == 0) || ((neighborAvailableDirections & Directions.LEFT.getVal()) == 0) )
                 {
                     return;
                 }
@@ -126,12 +126,12 @@ public class Pipe extends Observable{
                     return;
         }
         //this neighbor has a shared joint! connect with it.
-        _connectedPipes.add(neighbor);
+        _connectedPipes.put(relativeDirection,neighbor);
     }
 
-    public void removeNeighborPipe(Pipe removedNeighbor)
+    public void removeNeighborPipe(Directions neighborDirection)
     {
-        _connectedPipes.remove(removedNeighbor);
+        _connectedPipes.remove(neighborDirection);
     }
 
     public void startFlow(Directions flowDirection)
@@ -140,6 +140,9 @@ public class Pipe extends Observable{
         _flowStarted = true;
         //set flow direction to be used by startNeighborsFlow to find suitable pipe
         _flowDirection = flowDirection;
+        //notify game board that flow has started in this pipe (start animation)
+        setChanged();
+        notifyObservers(FlowStatus.FLOW_STARTED_IN_PIPE);
         //create task to execute when the pipe gets full
         TimerTask task = new TimerTask() {
             @Override
@@ -151,9 +154,6 @@ public class Pipe extends Observable{
         Timer timer = new Timer("flowTimer");
         //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
         timer.schedule(task,_timeToFullCapacityInSeconds * 1000);
-        //notify game board that flow has started in this pipe (start animation)
-        setChanged();
-        notifyObservers(FlowStatus.FLOW_STARTED_IN_PIPE);
     }
 
     public void startNeighborsFlow()
@@ -171,39 +171,44 @@ public class Pipe extends Observable{
         //handle cross pipe differently from other pipes - may have more than one neighbor
         if (_pipeType == PipeType.CROSS)
         {
-            for (Pipe neighborPipe : _connectedPipes)
+            Pipe nextPipe = _connectedPipes.get(_flowDirection);
+            if (nextPipe == null)
             {
-                int direction = _flowDirection.getOppositeDirection().getVal() & AvailableDirections.get(neighborPipe.getPipeType());
-                if (( (direction == Directions.LEFT.getVal()) && (_position.x < neighborPipe._position.x)) || ((direction == Directions.RIGHT.getVal()) && (_position.x > neighborPipe._position.x) )
-                         ||((direction == Directions.UP.getVal()) && (_position.y > neighborPipe._position.y) ) || ((direction == Directions.DOWN.getVal()) && (_position.y < neighborPipe._position.y) ))
+                //no neighbor matching the flow direction
+                notifyObservers(FlowStatus.END_OF_PIPE);
+            } else {
+                //notify game board
+                notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                //start flow in same direction
+                nextPipe.startFlow(_flowDirection);
+            }
+            return;
+        } else {
+            for (Map.Entry<Directions, Pipe> pipeEntry : _connectedPipes.entrySet()) {
+                Pipe neighborPipe = pipeEntry.getValue();
+                if ((neighborPipe._flowStarted == true) && (neighborPipe._pipeType != PipeType.CROSS))
+                {
+                    //this neighbor was already visited and pipe type is nor cross (which allows more than one visit)
+                    continue;
+                }
+                notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                if (neighborPipe.getPipeType() == PipeType.HORIZONTAL || neighborPipe.getPipeType() == PipeType.VERTICAL || neighborPipe.getPipeType() == PipeType.CROSS)
                 {
                     //same flow direction
                     neighborPipe.startFlow(_flowDirection);
-                    //start flow in the next pipe
-                    notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
                     return;
+                } else {
+                    int newDirection = pipeEntry.getKey().getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
+                    for (Directions newFlowDirection : Directions.values()) {
+                        if (newFlowDirection.getVal() == newDirection) {
+                            neighborPipe.startFlow(newFlowDirection);
+                            return;
+                        }
+                    }
                 }
             }
             notifyObservers(FlowStatus.END_OF_PIPE);
         }
-        else {
-            Pipe neighborPipe = _connectedPipes.get(0);
-            if (neighborPipe.getPipeType() == PipeType.HORIZONTAL || neighborPipe.getPipeType() == PipeType.VERTICAL || neighborPipe.getPipeType() == PipeType.CROSS)
-            {
-                //same flow direction
-                neighborPipe.startFlow(_flowDirection);
-            } else {
-                int newDirection = _flowDirection.getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
-                for (Directions direction : Directions.values()) {
-                    if (direction.getVal() == newDirection) {
-                        neighborPipe.startFlow(direction);
-                        break;
-                    }
-                }
-            }
-            notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
-        }
-
     }
 
     public boolean isRemovable()

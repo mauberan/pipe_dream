@@ -80,13 +80,16 @@ public class GameBoard implements Observer {
         //get pipe by position
         Pipe neighborToUpdate = _board[position.x][position.y];
         //remove the old pipe from this pipe neighbors list
-        if (neighborToUpdate != null)
+        if (neighborToUpdate == null)
         {
-            //remove old pipe
-            neighborToUpdate.removeNeighborPipe(oldPipe);
-            //add new pipe
-            neighborToUpdate.addNeighborPipe(newPipe,relativeDirection);
+            return;
         }
+        //remove old neighbor pipe (only if exists)
+        neighborToUpdate.removeNeighborPipe(relativeDirection);
+        //add new pipe
+        neighborToUpdate.addNeighborPipe(newPipe,relativeDirection);
+        //update this pipe with this new neighbor
+        newPipe.addNeighborPipe(neighborToUpdate,relativeDirection.getOppositeDirection());
     }
 
     public void resetGame()
