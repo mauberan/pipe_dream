@@ -33,4 +33,25 @@ public class Point {
         return this.y;
 
     }
+
+    @Override
+    public boolean equals(Object o) {
+
+        // If the object is compared with itself then return true
+        if (o == this) {
+            return true;
+        }
+
+        /* Check if o is an instance of Pipe or not
+          "null instanceof [type]" also returns false */
+        if (!(o instanceof Point)) {
+            return false;
+        }
+
+        // typecast o to Complex so that we can compare data members
+        Point other = (Point) o;
+
+        // Compare the data members and return accordingly
+        return (other.x == this.x) && (other.x == this.x);
+    }
 }

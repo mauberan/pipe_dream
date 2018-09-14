@@ -3,6 +3,8 @@ package com.hit.project.pipedream.logic;
 import java.util.Observable;
 import java.util.Random;
 import java.util.Observer;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class GameBoard extends Observable implements Observer {
     private int _rowColumnSize;
@@ -13,7 +15,8 @@ public class GameBoard extends Observable implements Observer {
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
-    private static final int TIME_IN_PIPE = 50;
+    private static final int TIME_IN_PIPE = 1000;
+    private static final int TIME_BEFORE_FLOW = 20*1000;
     /* END CONSTANTS */
 
     public GameBoard(int rowColumnSize)
@@ -36,18 +39,18 @@ public class GameBoard extends Observable implements Observer {
         Pipe firstPipe;
         if (direction == Pipe.Directions.RIGHT.getVal())
         {
-            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_RIGHT);
+            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_RIGHT);
             firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
         } else if (direction == Pipe.Directions.LEFT.getVal())
         {
-            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_LEFT);
+            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_LEFT);
             firstPipe.setFlowDirection(Pipe.Directions.LEFT);
         } else if (direction == Pipe.Directions.UP.getVal())
         {
-            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_UP);
+            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_UP);
             firstPipe.setFlowDirection(Pipe.Directions.UP);
         } else if (direction == Pipe.Directions.DOWN.getVal()) {
-            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_DOWN);
+            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_DOWN);
             firstPipe.setFlowDirection(Pipe.Directions.DOWN);
         } else {
             firstPipe = null;
@@ -68,7 +71,17 @@ public class GameBoard extends Observable implements Observer {
             return;
         }
         _currentPipe = _firstPipe;
-        _firstPipe.startFlow(TIME_IN_PIPE);
+        //create task to execute when the pipe gets full
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                _firstPipe.startFlow();
+            }
+        };
+        //create the timer (on timeout will execute the task)
+        Timer timer = new Timer("flowTimer");
+        //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
+        timer.schedule(task,TIME_BEFORE_FLOW);
     }
 
     public int getScore()
@@ -86,7 +99,7 @@ public class GameBoard extends Observable implements Observer {
             return false;
         }
         //create new pipe
-        Pipe newPipe = new Pipe(position,pipeType);
+        Pipe newPipe = new Pipe(TIME_IN_PIPE,position,pipeType);
         //add new pipe to board
         _board[position.x][position.y] = newPipe;
         //add game board as observer to get updated when the pipe is full
