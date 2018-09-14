@@ -19,6 +19,9 @@ import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.util.Dictionary;
+import java.util.Enumeration;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -37,7 +40,9 @@ import java.util.Map;
 import java.util.Queue;
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
-    com.hit.project.pipedream.logic.GameBoard gameBoard = new GameBoard(7);
+    GameBoard gameBoard = new GameBoard(7);
+    Map<Point,BoxButton> layoutBoard = new HashMap<Point,BoxButton>();
+
     @Override
     public void update(Observable observable, Object o) {
         if (!(observable instanceof GameBoard)) {
@@ -78,6 +83,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         TextView title = findViewById(R.id.title_text_box);
         gameBoard.addObserver(this);
+        gameBoard.getFirstPipe();
+
         title.setTypeface(tf);
 
         CreateBoard();
@@ -140,6 +147,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                 newButton.DrawPipe();
                 boxContainer.addView(newButton);
+                layoutBoard.put(newButton.getPoint(),newButton);
 
             }
             mainLinearLayout.addView(row);
@@ -150,33 +158,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public BoxButton getBoxFromPoint(Point point) {
-        LinearLayout layout = (LinearLayout)findViewById(R.id.grid_linear);
-        int childCount = layout.getChildCount();
-        BoxButton temp = loopViews(layout,point);
-        if (temp != null) {
-            return temp;
+        LinearLayout layout = findViewById(R.id.grid_linear);
+        BoxButton ret = layoutBoard.get(point);
+        if (ret != null) {
+            return ret;
         }
+
         return null;
 
 
     }
 
-    private BoxButton loopViews(ViewGroup view,Point point) {
-        for (int i = 0; i < view.getChildCount(); i++) {
-            View v = view.getChildAt(i);
-
-            if (v instanceof BoxButton) {
-                if (((BoxButton)v).getPoint(). == point) {
-                    return (BoxButton) v;
-                }
-
-            } else if (v instanceof ViewGroup) {
-
-                this.loopViews((ViewGroup) v,point);
-            }
-        }
-        return null;
-    }
 
 
     class BoxButton extends ImageButton {
