@@ -13,6 +13,7 @@ public class GameBoard extends Observable implements Observer {
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
+    private static final int TIME_IN_PIPE = 50;
     /* END CONSTANTS */
 
     public GameBoard(int rowColumnSize)
@@ -59,7 +60,7 @@ public class GameBoard extends Observable implements Observer {
         return _firstPipe;
     }
 
-    public void startGame(int timeInPipe)
+    public void startGame()
     {
         if (_firstPipe == null)
         {
@@ -67,7 +68,7 @@ public class GameBoard extends Observable implements Observer {
             return;
         }
         _currentPipe = _firstPipe;
-        _firstPipe.startFlow(timeInPipe);
+        _firstPipe.startFlow(TIME_IN_PIPE);
     }
 
     public int getScore()
@@ -181,5 +182,10 @@ public class GameBoard extends Observable implements Observer {
     public Pipe getCurrentPipe()
     {
         return _currentPipe;
+    }
+
+    public int getTimeInPipe()
+    {
+        return TIME_IN_PIPE;
     }
 }

@@ -52,7 +52,7 @@ public class GameBoardUnitTest {
         result = _board.addPipeToBoard(new Point(3,3), Pipe.PipeType.HORIZONTAL);
         assertTrue("failed to add pipe (3,3)",result);
         //start flow in pipes
-        _board.startGame(1000);
+        _board.startGame();
         try {
             //wait until end of game
             Thread.sleep( 10*1000);
@@ -88,7 +88,7 @@ public class GameBoardUnitTest {
         result = _board.addPipeToBoard(new Point(4,4), Pipe.PipeType.BOTTOM_RIGHT);
         assertTrue("failed to add pipe (4,4)",result);
         //start flow in pipes
-        _board.startGame(1000);
+        _board.startGame();
         try {
             //wait until end of game
             Thread.sleep( 15*1000);
