@@ -3,10 +3,11 @@ package com.hit.project.pipedream.logic;
 import java.util.Observable;
 import java.util.Observer;
 
-public class GameBoard implements Observer {
+public class GameBoard extends Observable implements Observer {
     private int _rowColumnSize;
     private Pipe[][] _board;
     private int _score;
+    private Pipe _currentPipe;
 
     /* CONSTANTS */
     private static final int TIME_TO_FULL_CAPACITY_SECONDS = 1;
@@ -111,21 +112,32 @@ public class GameBoard implements Observer {
         }
         Pipe pipe = (Pipe)observable;
         Pipe.FlowStatus status = (Pipe.FlowStatus)o;
+        setChanged();
+        _currentPipe = pipe;
+
         switch (status)
         {
             case FLOW_STARTED_IN_PIPE:
                 //print debug information
                 System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),_score,pipe.getFlowDirection()));
+                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
                 break;
             case FOUND_NEXT_PIPE:
                 System.out.println("Pipe is full, found the next linked pipe!");
                 //update score
                 _score += SCORE_PER_PIPE;
+                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
                 break;
             case END_OF_PIPE:
+                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
                 System.out.println("Pipe is full, reached to the end of the pipe!");
                 break;
                 default:
         }
+    }
+
+    public Pipe getCurrentPipe()
+    {
+        return _currentPipe;
     }
 }
