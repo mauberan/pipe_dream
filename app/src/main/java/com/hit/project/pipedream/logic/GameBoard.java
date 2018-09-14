@@ -66,6 +66,7 @@ public class GameBoard extends Observable implements Observer {
             //invalid starting point!
             return;
         }
+        _currentPipe = _firstPipe;
         _firstPipe.startFlow(timeInPipe);
     }
 
@@ -142,6 +143,7 @@ public class GameBoard extends Observable implements Observer {
         //set new first pipe
         _firstPipe = getRandomFirstPipe();
         _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
+        _currentPipe = null;
     }
 
     @Override
