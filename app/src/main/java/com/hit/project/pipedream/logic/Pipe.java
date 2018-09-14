@@ -12,7 +12,8 @@ public class Pipe extends Observable{
 
     public enum PipeType {TOP_LEFT("Top Left Pipe"),TOP_RIGHT("Top Right Pipe"),
         BOTTOM_LEFT("Bottom Left Pipe"),BOTTOM_RIGHT("Bottom Right Pipe"),
-        CROSS("Cross Pipe"),HORIZONTAL("Horizontal Pipe"),VERTICAL("Vertical Pipe");
+        CROSS("Cross Pipe"),HORIZONTAL("Horizontal Pipe"),VERTICAL("Vertical Pipe"),START_RIGHT("Start Right"),
+        START_LEFT("Start Left"),START_UP("Start Up"),START_DOWN("Start Down");
 
         private String _description;
         PipeType(String description)
@@ -80,15 +81,18 @@ public class Pipe extends Observable{
         put(PipeType.CROSS, Directions.LEFT.getVal() | Directions.RIGHT.getVal() | Directions.DOWN.getVal() | Directions.UP.getVal());
         put(PipeType.HORIZONTAL, Directions.LEFT.getVal() | Directions.RIGHT.getVal());
         put(PipeType.VERTICAL, Directions.UP.getVal() | Directions.DOWN.getVal());
+        put(PipeType.START_RIGHT, Directions.RIGHT.getVal());
+        put(PipeType.START_LEFT, Directions.LEFT.getVal());
+        put(PipeType.START_DOWN, Directions.DOWN.getVal());
+        put(PipeType.START_UP, Directions.UP.getVal());
     }};
     /* end pipe direction*/
 
-    public Pipe(int timeToFullCapacityInSeconds, Point position, PipeType pipeDirection)
+    public Pipe(Point position, PipeType pipeDirection)
     {
         _flowStarted = false;
         _connectedPipes = new HashMap<>();
         _position = position;
-        _timeToFullCapacityInSeconds = timeToFullCapacityInSeconds;
         _pipeType = pipeDirection;
         _flowDirection = Directions.END;
     }
@@ -134,12 +138,11 @@ public class Pipe extends Observable{
         _connectedPipes.remove(neighborDirection);
     }
 
-    public void startFlow(Directions flowDirection)
+    public void startFlow(int timeInPipe)
     {
+        _timeToFullCapacityInSeconds = timeInPipe;
         //mark flow started to block the user from removing this pipe
         _flowStarted = true;
-        //set flow direction to be used by startNeighborsFlow to find suitable pipe
-        _flowDirection = flowDirection;
         //notify game board that flow has started in this pipe (start animation)
         setChanged();
         notifyObservers(FlowStatus.FLOW_STARTED_IN_PIPE);
@@ -153,7 +156,7 @@ public class Pipe extends Observable{
         //create the timer (on timeout will execute the task)
         Timer timer = new Timer("flowTimer");
         //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
-        timer.schedule(task,_timeToFullCapacityInSeconds * 1000);
+        timer.schedule(task,_timeToFullCapacityInSeconds);
     }
 
     public void startNeighborsFlow()
@@ -180,7 +183,8 @@ public class Pipe extends Observable{
                 //notify game board
                 notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
                 //start flow in same direction
-                nextPipe.startFlow(_flowDirection);
+                nextPipe.setFlowDirection(_flowDirection);
+                nextPipe.startFlow(_timeToFullCapacityInSeconds);
             }
             return;
         } else {
@@ -195,13 +199,15 @@ public class Pipe extends Observable{
                 if (neighborPipe.getPipeType() == PipeType.HORIZONTAL || neighborPipe.getPipeType() == PipeType.VERTICAL || neighborPipe.getPipeType() == PipeType.CROSS)
                 {
                     //same flow direction
-                    neighborPipe.startFlow(_flowDirection);
+                    neighborPipe.setFlowDirection(_flowDirection);
+                    neighborPipe.startFlow(_timeToFullCapacityInSeconds);
                     return;
                 } else {
                     int newDirection = pipeEntry.getKey().getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
                     for (Directions newFlowDirection : Directions.values()) {
                         if (newFlowDirection.getVal() == newDirection) {
-                            neighborPipe.startFlow(newFlowDirection);
+                            neighborPipe.setFlowDirection(_flowDirection);
+                            neighborPipe.startFlow(_timeToFullCapacityInSeconds);
                             return;
                         }
                     }
@@ -250,5 +256,10 @@ public class Pipe extends Observable{
     public Directions getFlowDirection()
     {
         return _flowDirection;
+    }
+
+    public void setFlowDirection(Directions flowDirection)
+    {
+        _flowDirection = flowDirection;
     }
 }

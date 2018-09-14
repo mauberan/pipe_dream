@@ -1,6 +1,7 @@
 package com.hit.project.pipedream.logic;
 
 import java.util.Observable;
+import java.util.Random;
 import java.util.Observer;
 
 public class GameBoard extends Observable implements Observer {
@@ -8,9 +9,9 @@ public class GameBoard extends Observable implements Observer {
     private Pipe[][] _board;
     private int _score;
     private Pipe _currentPipe;
+    private Pipe _firstPipe;
 
     /* CONSTANTS */
-    private static final int TIME_TO_FULL_CAPACITY_SECONDS = 1;
     private static final int SCORE_PER_PIPE = 50;
     /* END CONSTANTS */
 
@@ -19,17 +20,53 @@ public class GameBoard extends Observable implements Observer {
         _board = new Pipe[rowColumnSize][rowColumnSize];
         _rowColumnSize = rowColumnSize;
         _score = 0;
+        _firstPipe = getRandomFirstPipe();
+        _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
     }
 
-    public void startGame(Point firstPipePosition,Pipe.Directions flowDirection)
+    private Pipe getRandomFirstPipe()
     {
-        Pipe firstPipe = _board[firstPipePosition.x][firstPipePosition.y];
-        if (firstPipe == null)
+        //get random start position
+        Random rand = new Random();
+        //50 is the maximum and the 1 is our minimum
+        int  row = rand.nextInt(_rowColumnSize - 3) + 1;
+        int column = rand.nextInt(_rowColumnSize-3) + 1;
+        double direction = Math.pow(2, rand.nextInt(5));
+        Pipe firstPipe;
+        if (direction == Pipe.Directions.RIGHT.getVal())
+        {
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_RIGHT);
+            firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
+        } else if (direction == Pipe.Directions.LEFT.getVal())
+        {
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_LEFT);
+            firstPipe.setFlowDirection(Pipe.Directions.LEFT);
+        } else if (direction == Pipe.Directions.UP.getVal())
+        {
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_UP);
+            firstPipe.setFlowDirection(Pipe.Directions.UP);
+        } else if (direction == Pipe.Directions.DOWN.getVal()) {
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_DOWN);
+            firstPipe.setFlowDirection(Pipe.Directions.DOWN);
+        } else {
+            firstPipe = null;
+        }
+        return firstPipe;
+    }
+
+    public Pipe getFirstPipe()
+    {
+        return _firstPipe;
+    }
+
+    public void startGame(int timeInPipe)
+    {
+        if (_firstPipe == null)
         {
             //invalid starting point!
             return;
         }
-        firstPipe.startFlow(flowDirection);
+        _firstPipe.startFlow(timeInPipe);
     }
 
     public int getScore()
@@ -47,7 +84,7 @@ public class GameBoard extends Observable implements Observer {
             return false;
         }
         //create new pipe
-        Pipe newPipe = new Pipe(TIME_TO_FULL_CAPACITY_SECONDS,position,pipeType);
+        Pipe newPipe = new Pipe(position,pipeType);
         //add new pipe to board
         _board[position.x][position.y] = newPipe;
         //add game board as observer to get updated when the pipe is full
@@ -102,6 +139,9 @@ public class GameBoard extends Observable implements Observer {
         {
             java.util.Arrays.fill(row, null);
         }
+        //set new first pipe
+        _firstPipe = getRandomFirstPipe();
+        _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
     }
 
     @Override
@@ -120,13 +160,13 @@ public class GameBoard extends Observable implements Observer {
             case FLOW_STARTED_IN_PIPE:
                 //print debug information
                 System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),_score,pipe.getFlowDirection()));
-                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
+                notifyObservers(Pipe.FlowStatus.FLOW_STARTED_IN_PIPE);
                 break;
             case FOUND_NEXT_PIPE:
                 System.out.println("Pipe is full, found the next linked pipe!");
                 //update score
                 _score += SCORE_PER_PIPE;
-                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
+                notifyObservers(Pipe.FlowStatus.FOUND_NEXT_PIPE);
                 break;
             case END_OF_PIPE:
                 notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
