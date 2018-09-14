@@ -37,6 +37,6 @@
         android:strokeAlpha="0"
         android:fillColor="#696969"/>
     <path
-        android:fillColor="#FF000000"
+android:fillColor="#000000"
         android:pathData="M300.003,0l-0,500l-100,0l-0,-500z"/>
 </vector>

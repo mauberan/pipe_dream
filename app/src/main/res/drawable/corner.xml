@@ -35,15 +35,15 @@
         android:strokeAlpha="0"
         android:fillColor="#696969"/>
     <path
-        android:fillColor="#FF000000"
+android:fillColor="#000000"
         android:pathData="M200,500l0,-200l100,-0l0,200z"
         android:strokeAlpha="0"/>
     <path
-        android:fillColor="#FF000000"
+android:fillColor="#000000"
         android:pathData="M300,200h200v100h-200z"
         android:strokeAlpha="0"/>
     <path
-        android:fillColor="#FF000000"
+android:fillColor="#000000"
         android:pathData="M200,300L200,250A50,50 0,0 1,250 200L300,200L300,300L200,300Z"
         android:strokeAlpha="0"/>
 </vector>
