@@ -31,7 +31,7 @@ public class GameBoard extends Observable implements Observer {
         //50 is the maximum and the 1 is our minimum
         int  row = rand.nextInt(_rowColumnSize - 3) + 1;
         int column = rand.nextInt(_rowColumnSize-3) + 1;
-        double direction = Math.pow(2, rand.nextInt(5));
+        double direction = Math.pow(2, rand.nextInt(4));
         Pipe firstPipe;
         if (direction == Pipe.Directions.RIGHT.getVal())
         {
