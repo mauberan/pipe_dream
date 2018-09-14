@@ -67,7 +67,7 @@ public class Pipe extends Observable{
 
     private boolean _flowStarted;
     private Map<Directions, Pipe>  _connectedPipes;
-    private int _timeToFullCapacityInSeconds;
+    private int _timeToFullCapacity;
     private Point _position;
     PipeType _pipeType;
     Directions _flowDirection;
@@ -140,7 +140,7 @@ public class Pipe extends Observable{
 
     public void startFlow(int timeInPipe)
     {
-        _timeToFullCapacityInSeconds = timeInPipe;
+        _timeToFullCapacity = timeInPipe;
         //mark flow started to block the user from removing this pipe
         _flowStarted = true;
         //notify game board that flow has started in this pipe (start animation)
@@ -156,7 +156,7 @@ public class Pipe extends Observable{
         //create the timer (on timeout will execute the task)
         Timer timer = new Timer("flowTimer");
         //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
-        timer.schedule(task,_timeToFullCapacityInSeconds);
+        timer.schedule(task,_timeToFullCapacity);
     }
 
     public void startNeighborsFlow()
@@ -184,7 +184,7 @@ public class Pipe extends Observable{
                 notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
                 //start flow in same direction
                 nextPipe.setFlowDirection(_flowDirection);
-                nextPipe.startFlow(_timeToFullCapacityInSeconds);
+                nextPipe.startFlow(_timeToFullCapacity);
             }
             return;
         } else {
@@ -200,14 +200,14 @@ public class Pipe extends Observable{
                 {
                     //same flow direction
                     neighborPipe.setFlowDirection(_flowDirection);
-                    neighborPipe.startFlow(_timeToFullCapacityInSeconds);
+                    neighborPipe.startFlow(_timeToFullCapacity);
                     return;
                 } else {
                     int newDirection = pipeEntry.getKey().getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
                     for (Directions newFlowDirection : Directions.values()) {
                         if (newFlowDirection.getVal() == newDirection) {
                             neighborPipe.setFlowDirection(_flowDirection);
-                            neighborPipe.startFlow(_timeToFullCapacityInSeconds);
+                            neighborPipe.startFlow(_timeToFullCapacity);
                             return;
                         }
                     }
