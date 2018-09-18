@@ -46,7 +46,7 @@ import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PI
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
     GameBoard gameBoard = new GameBoard(7);
-    Dictionary<Point,BoxButton> layoutBoard = new Hashtable<>();
+    Map<Point,BoxButton> layoutBoard = new HashMap<>();
 
 
     @Override
@@ -67,12 +67,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                        box.AnimateFlow(currentPipe.getFlowDirection());
                    }
                });
-
+                System.out.println(String.format("pipe location:%s flow direction:%s",gameBoard.getCurrentPipe().getPosition(),gameBoard.getCurrentPipe().getFlowDirection()));
 //               currentPipe.g
                break;
            case FOUND_NEXT_PIPE:
+        Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
+            //TODO: CREATE SCORE VIEW AND UPDATE IT HERE
                break;
            case END_OF_PIPE:
+                      Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
+               ResetBoard();
+
                break;
        }
     }
@@ -84,20 +89,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     public void onClick(View view) {
         //if flow started in pipe --> do nothing
 
-
         BoxButton box = (BoxButton) view;
 
         if (box.getType() == Pipe.PipeType.START_DOWN || box.getType() == Pipe.PipeType.START_UP || box.getType() == Pipe.PipeType.START_LEFT || box.getType() == Pipe.PipeType.START_LEFT) {
             return;
         }
 
-        Pipe.PipeType nextType = nextBar.OnClickAction();
+        Pipe.PipeType nextType = nextBar.PeekNextType();
 
+        boolean result = gameBoard.addPipeToBoard(box.getPoint(),nextType);
 
-        box.setType(nextType);
-        gameBoard.addPipeToBoard(box.getPoint(),box.getType());
-        box.AnimateClick();
+        if (result) {
+            box.setType(nextBar.OnClickAction());
+            box.AnimateClick();
 
+        }
 //        box.DrawPipe();
 
 //        Toast.makeText(this, box.getPoint().toString(), Toast.LENGTH_LONG).show()
@@ -110,66 +116,63 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         TextView title = findViewById(R.id.title_text_box);
         gameBoard.addObserver(this);
-        Pipe first = gameBoard.getFirstPipe();
+
         title.setTypeface(tf);
         CreateBoard();
+        ResetBoard();
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
 
 
-        BoxButton firstBox = getBoxFromPoint(first.getPosition());
-        firstBox.setType(first.getPipeType());
-        firstBox.DrawPipe();
-
-//        gameBoard.startGame();
-
-        BoxButton horiz = getBoxFromPoint(new Point(2,3));
-            horiz.setType(Pipe.PipeType.HORIZONTAL);
 
 
-        BoxButton topRight = getBoxFromPoint(new Point(3,3));
-        topRight.setType(Pipe.PipeType.TOP_RIGHT);
-
-//        BoxButton selected_pipe1 = getBoxFromPoint(new Point(1,3));
-//        selected_pipe1.setType(Pipe.PipeType.START_DOWN);
-
-        BoxButton topLeft = getBoxFromPoint(new Point(4,3));
-        topLeft.setType(Pipe.PipeType.TOP_LEFT);
-
-        BoxButton bottomLeft = getBoxFromPoint(new Point(4,4));
-        bottomLeft.setType(Pipe.PipeType.BOTTOM_LEFT);
-
-        BoxButton bottomRight = getBoxFromPoint(new Point(3,4));
-        bottomRight.setType(Pipe.PipeType.BOTTOM_RIGHT);
-
-        BoxButton selected_pipe5 = getBoxFromPoint(new Point(5,3));
-        selected_pipe5.setType(Pipe.PipeType.VERTICAL);
-        BoxButton selected_pipe6 = getBoxFromPoint(new Point(5,2));
-        selected_pipe6.setType(Pipe.PipeType.CROSS);
-        BoxButton selected_pipe7 = getBoxFromPoint(new Point(1,2));
-        selected_pipe7.setType(Pipe.PipeType.START_DOWN);
-        BoxButton selected_pipe8 = getBoxFromPoint(new Point(2,2));
-        selected_pipe8.setType(Pipe.PipeType.START_UP);
-        BoxButton selected_pipe9 = getBoxFromPoint(new Point(3,2));
-        selected_pipe9.setType(Pipe.PipeType.START_LEFT);
-        BoxButton selected_pipe10 = getBoxFromPoint(new Point(4,2));
-        selected_pipe10.setType(Pipe.PipeType.START_RIGHT);
-
-        topRight.DrawPipe();
-//        selected_pipe1.DrawPipe();
-        bottomLeft.DrawPipe();
-        bottomRight.DrawPipe();
-        topLeft.DrawPipe();
-
-        topLeft.AnimateFlow(Pipe.Directions.LEFT);
-//        selected_pipe5.DrawPipe();
-//        selected_pipe6.DrawPipe();
-//        selected_pipe7.DrawPipe();
-//        selected_pipe8.DrawPipe();
-//        selected_pipe9.DrawPipe();
-//        selected_pipe10.DrawPipe();
-
-//        selected_pipe.AnimateFlow(Pipe.Directions.UP);
+//        BoxButton horiz = getBoxFromPoint(new Point(2,3));
+//            horiz.setType(Pipe.PipeType.HORIZONTAL);
+//
+//
+//        BoxButton topRight = getBoxFromPoint(new Point(3,3));
+//        topRight.setType(Pipe.PipeType.TOP_RIGHT);
+//
+////        BoxButton selected_pipe1 = getBoxFromPoint(new Point(1,3));
+////        selected_pipe1.setType(Pipe.PipeType.START_DOWN);
+//
+//        BoxButton topLeft = getBoxFromPoint(new Point(4,3));
+//        topLeft.setType(Pipe.PipeType.TOP_LEFT);
+//
+//        BoxButton bottomLeft = getBoxFromPoint(new Point(4,4));
+//        bottomLeft.setType(Pipe.PipeType.BOTTOM_LEFT);
+//
+//        BoxButton bottomRight = getBoxFromPoint(new Point(3,4));
+//        bottomRight.setType(Pipe.PipeType.BOTTOM_RIGHT);
+//
+//        BoxButton selected_pipe5 = getBoxFromPoint(new Point(5,3));
+//        selected_pipe5.setType(Pipe.PipeType.VERTICAL);
+//        BoxButton selected_pipe6 = getBoxFromPoint(new Point(5,2));
+//        selected_pipe6.setType(Pipe.PipeType.CROSS);
+//        BoxButton selected_pipe7 = getBoxFromPoint(new Point(1,2));
+//        selected_pipe7.setType(Pipe.PipeType.START_DOWN);
+//        BoxButton selected_pipe8 = getBoxFromPoint(new Point(2,2));
+//        selected_pipe8.setType(Pipe.PipeType.START_UP);
+//        BoxButton selected_pipe9 = getBoxFromPoint(new Point(3,2));
+//        selected_pipe9.setType(Pipe.PipeType.START_LEFT);
+//        BoxButton selected_pipe10 = getBoxFromPoint(new Point(4,2));
+//        selected_pipe10.setType(Pipe.PipeType.START_RIGHT);
+//
+//        topRight.DrawPipe();
+////        selected_pipe1.DrawPipe();
+//        bottomLeft.DrawPipe();
+//        bottomRight.DrawPipe();
+//        topLeft.DrawPipe();
+//
+//        topLeft.AnimateFlow(Pipe.Directions.LEFT);
+////        selected_pipe5.DrawPipe();
+////        selected_pipe6.DrawPipe();
+////        selected_pipe7.DrawPipe();
+////        selected_pipe8.DrawPipe();
+////        selected_pipe9.DrawPipe();
+////        selected_pipe10.DrawPipe();
+//
+////        selected_pipe.AnimateFlow(Pipe.Directions.UP);
     }
 
     public void CreateBoard() {
@@ -199,7 +202,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
                 newButton.setPoint(new Point(i, j));
-                newButton.setType(null);
                 newButton.setOnClickListener(MainActivity.this);
                 layoutBoard.put(newButton.getPoint(),newButton);
 
@@ -212,6 +214,20 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             mainLinearLayout.invalidate();
         }
 
+    }
+
+    public void ResetBoard() {
+        for (Map.Entry<Point,BoxButton> entry: layoutBoard.entrySet()) {
+            BoxButton box = entry.getValue();
+            box.setType(null);
+            box.DrawPipe();
+        }
+        gameBoard.resetGame();
+        Pipe first = gameBoard.getFirstPipe();
+        BoxButton firstBox = getBoxFromPoint(first.getPosition());
+        firstBox.setType(first.getPipeType());
+        firstBox.DrawPipe();
+        gameBoard.startGame();
     }
 
     public BoxButton getBoxFromPoint(Point point) {
@@ -363,7 +379,6 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
             this.setScaleX(1);
             this.setScaleY(1);
             this.setRotation(0);
-            if ((Pipe.AvailableDirections.get(type) & endDirection.getVal()) != 0) {
 
                 switch (type) {
                     case TOP_LEFT:
@@ -409,15 +424,14 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                     case BOTTOM_RIGHT: //TODO: FINISH THIS
                         this.setImageResource(R.drawable.corner_animation);
 
-                        this.setImageResource(R.drawable.corner_animation);
-                        if (endDirection == Pipe.Directions.DOWN) {
-
-                        } else {  //DIRECTION IS RIGHT
+                        if (endDirection == Pipe.Directions.RIGHT) {
+                            this.setScaleX(-1);
+                            this.setScaleY(-1);
 
                         }
                         break;
                     case CROSS:
-                        this.setImageResource(R.drawable.cross); //TODO: FIGURE OUT THIS SHIT
+                        this.setImageResource(R.drawable.cross_first_flow_animation); //TODO: FIGURE OUT THIS SHIT
                         break;
                     case HORIZONTAL:
                         this.setImageResource(R.drawable.vertical_animation);
@@ -456,12 +470,14 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                     @Override
                     public void onAnimationStart() {
                 Toast.makeText(MainActivity.this,endDirection.toString(), Toast.LENGTH_LONG).show();
+                        System.out.println("ANIM START");
                     }
 
                     @Override
-                    public void onAnimationFinish() {
+                    public void onAnimationFinish(){
+                        System.out.println("ANIM FINISHED");
 
-//                                         Toast.makeText(MainActivity.this, "END", Toast.LENGTH_LONG).show();
+                        gameBoard.notifyPipeIsFull();
                     }
                 };
                 this.setImageDrawable(cad);
@@ -472,7 +488,7 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
 
 //        }
 
-            }
+
         }
     }
 
@@ -530,6 +546,10 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                 }
 
             }
+            public Pipe.PipeType PeekNextType() {
+                return nextPipeQueue.peek().getType();
+
+            }
 
 
         }
@@ -547,11 +567,17 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
 //         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
 //             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
 //         }
+         int i = 0;
+         for (; i < 18; i++) {
+                 this.addFrame(aniDrawable.getFrame(i), 0);
 
+         }
 
          //time manipulation
-         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
-             this.addFrame(aniDrawable.getFrame(i), 25);
+         for (; i < aniDrawable.getNumberOfFrames(); i++) {
+
+                 this.addFrame(aniDrawable.getFrame(i), 25);
+
          }
          this.setOneShot(true);
 
