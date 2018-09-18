@@ -85,14 +85,13 @@ public class GameBoard extends Observable implements Observer {
         System.out.println(String.format("Will start flow in:%d ms position:%s",TIME_BEFORE_FLOW,_currentPipe.getPosition()));
     }
 
-    public void notifyPipeIsFull(Point pipePosition)
+    public void notifyPipeIsFull()
     {
-        Pipe pipe = _board[pipePosition.getX()][pipePosition.getY()];
-        if (pipe == null)
+        if (_currentPipe == null)
         {
             return;
         }
-        pipe.pipeIsFull();
+        _currentPipe.pipeIsFull();
     }
 
     public int getScore()
