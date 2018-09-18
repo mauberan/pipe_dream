@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:viewportWidth="500"
+    android:viewportHeight="500"
+    android:width="500dp"
+    android:height="500dp">
+    <group
+        android:rotation="90"
+        android:scaleX="-1"
+        android:translateX="159.9969"
+        android:translateY="1000.006">
+        <path
+            android:pathData="M500.003 -170.003l28 0a12 12 0 0 1 12 12l0 18 -40 0 0 -30z"
+            android:fillColor="#656060" />
+    </group>
+    <group
+        android:rotation="90"
+        android:scaleX="-1"
+        android:translateX="135.9969"
+        android:translateY="920.006">
+        <path
+            android:pathData="M460.003 -182.003l6 0a6 6 0 0 1 6 6l0 12 -12 0 0 -18z"
+            android:fillColor="#696969" />
+    </group>
+    <group
+        android:rotation="90"
+        android:scaleX="-1"
+        android:scaleY="-1"
+        android:translateX="500.003">
+        <path
+            android:pathData="M-500.003 -330.003l28 0a12 12 0 0 1 12 12l0 18 -40 0 0 -30z"
+            android:fillColor="#656060" />
+    </group>
+    <group
+        android:rotation="90"
+        android:scaleX="-1"
+        android:scaleY="-1"
+        android:translateX="500.003">
+        <path
+            android:pathData="M-460.003 -318.003l6 0a6 6 0 0 1 6 6l0 12 -12 0 0 -18z"
+            android:fillColor="#696969" />
+    </group>
+    <group
+        android:rotation="90"
+        android:translateX="500"
+        android:translateY="200">
+        <path
+            android:pathData="M0 200l300 0 0 100 -300 0z"
+            android:fillColor="#000000" />
+    </group>
+    <path
+        android:pathData="M350 250A100 100 0 0 1 250 350 100 100 0 0 1 150 250 100 100 0 0 1 250 150 100 100 0 0 1 350 250Z"
+        android:fillColor="#000000" />
+    <path
+        android:pathData="M305 250a55 55 0 0 1 -55 55 55 55 0 0 1 -55 -55 55 55 0 0 1 55 -55 55 55 0 0 1 55 55z"
+        android:fillColor="#09d2ff" />
+</vector>
