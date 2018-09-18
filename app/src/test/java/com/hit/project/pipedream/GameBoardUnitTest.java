@@ -55,7 +55,7 @@ public class GameBoardUnitTest {
         _board.startGame();
         try {
             //wait until end of game
-            Thread.sleep( 10*1000);
+            Thread.sleep( 60*1000);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

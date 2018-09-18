@@ -15,7 +15,6 @@ public class GameBoard extends Observable implements Observer {
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
-    private static final int TIME_IN_PIPE = 1000;
     private static final int TIME_BEFORE_FLOW = 20*1000;
     /* END CONSTANTS */
 
@@ -26,6 +25,7 @@ public class GameBoard extends Observable implements Observer {
         _score = 0;
         _firstPipe = getRandomFirstPipe();
         _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
+        _firstPipe.addObserver(this);
     }
 
     private Pipe getRandomFirstPipe()
@@ -39,18 +39,18 @@ public class GameBoard extends Observable implements Observer {
         Pipe firstPipe;
         if (direction == Pipe.Directions.RIGHT.getVal())
         {
-            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_RIGHT);
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_RIGHT);
             firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
         } else if (direction == Pipe.Directions.LEFT.getVal())
         {
-            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_LEFT);
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_LEFT);
             firstPipe.setFlowDirection(Pipe.Directions.LEFT);
         } else if (direction == Pipe.Directions.UP.getVal())
         {
-            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_UP);
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_UP);
             firstPipe.setFlowDirection(Pipe.Directions.UP);
         } else if (direction == Pipe.Directions.DOWN.getVal()) {
-            firstPipe = new Pipe(TIME_IN_PIPE,new Point(row,column), Pipe.PipeType.START_DOWN);
+            firstPipe = new Pipe(new Point(row,column), Pipe.PipeType.START_DOWN);
             firstPipe.setFlowDirection(Pipe.Directions.DOWN);
         } else {
             firstPipe = null;
@@ -82,6 +82,17 @@ public class GameBoard extends Observable implements Observer {
         Timer timer = new Timer("flowTimer");
         //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
         timer.schedule(task,TIME_BEFORE_FLOW);
+        System.out.println(String.format("Will start flow in:%d ms position:%s",TIME_BEFORE_FLOW,_currentPipe.getPosition()));
+    }
+
+    public void notifyPipeIsFull(Point pipePosition)
+    {
+        Pipe pipe = _board[pipePosition.getX()][pipePosition.getY()];
+        if (pipe == null)
+        {
+            return;
+        }
+        pipe.pipeIsFull();
     }
 
     public int getScore()
@@ -99,7 +110,7 @@ public class GameBoard extends Observable implements Observer {
             return false;
         }
         //create new pipe
-        Pipe newPipe = new Pipe(TIME_IN_PIPE,position,pipeType);
+        Pipe newPipe = new Pipe(position,pipeType);
         //add new pipe to board
         _board[position.x][position.y] = newPipe;
         //add game board as observer to get updated when the pipe is full
@@ -156,7 +167,8 @@ public class GameBoard extends Observable implements Observer {
         }
         //set new first pipe
         _firstPipe = getRandomFirstPipe();
-        _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
+        _board[_firstPipe.getPosition().getX()][_firstPipe.getPosition().getY()] = _firstPipe;
+        _firstPipe.addObserver(this);
         _currentPipe = null;
     }
 
@@ -197,8 +209,4 @@ public class GameBoard extends Observable implements Observer {
         return _currentPipe;
     }
 
-    public int getTimeInPipe()
-    {
-        return TIME_IN_PIPE;
-    }
 }

@@ -35,6 +35,13 @@ public class Point {
     }
 
     @Override
+    public int hashCode() {
+        int result = x;
+        result = 31 * result + y;
+        return result;
+    }
+
+    @Override
     public boolean equals(Object o) {
 
         // If the object is compared with itself then return true
@@ -52,6 +59,6 @@ public class Point {
         Point other = (Point) o;
 
         // Compare the data members and return accordingly
-        return (other.x == this.x) && (other.x == this.x);
+        return (other.x == this.x) && (other.y == this.y);
     }
 }

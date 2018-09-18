@@ -1,12 +1,8 @@
 package com.hit.project.pipedream.logic;
 
 import java.util.HashMap;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Observable;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Pipe extends Observable{
 
@@ -67,7 +63,6 @@ public class Pipe extends Observable{
 
     private boolean _flowStarted;
     private Map<Directions, Pipe>  _connectedPipes;
-    private int _timeToFullCapacity;
     private Point _position;
     PipeType _pipeType;
     Directions _flowDirection;
@@ -88,14 +83,13 @@ public class Pipe extends Observable{
     }};
     /* end pipe direction*/
 
-    public Pipe(int timeToFullCapacity,Point position, PipeType pipeDirection)
+    public Pipe(Point position, PipeType pipeDirection)
     {
         _flowStarted = false;
         _connectedPipes = new HashMap<>();
         _position = position;
         _pipeType = pipeDirection;
         _flowDirection = Directions.END;
-        _timeToFullCapacity = timeToFullCapacity;
     }
 
     public void addNeighborPipe(Pipe neighbor,Directions relativeDirection) {
@@ -147,7 +141,7 @@ public class Pipe extends Observable{
         setChanged();
         notifyObservers(FlowStatus.FLOW_STARTED_IN_PIPE);
         //create task to execute when the pipe gets full
-        TimerTask task = new TimerTask() {
+/*        TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 startNeighborsFlow();
@@ -156,10 +150,15 @@ public class Pipe extends Observable{
         //create the timer (on timeout will execute the task)
         Timer timer = new Timer("flowTimer");
         //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
-        timer.schedule(task,_timeToFullCapacity);
+        timer.schedule(task,_timeToFullCapacity);*/
     }
 
-    public void startNeighborsFlow()
+    public void pipeIsFull()
+    {
+        startNeighborsFlow();
+    }
+
+    private void startNeighborsFlow()
     {
         setChanged();
         //go over the list of neighbors and start flow for each one of them
@@ -175,7 +174,7 @@ public class Pipe extends Observable{
         if (_pipeType == PipeType.CROSS)
         {
             Pipe nextPipe = _connectedPipes.get(_flowDirection);
-            if (nextPipe == null)
+            if (nextPipe == null || (nextPipe._pipeType != PipeType.CROSS && nextPipe._flowStarted))
             {
                 //no neighbor matching the flow direction
                 notifyObservers(FlowStatus.END_OF_PIPE);
@@ -240,7 +239,7 @@ public class Pipe extends Observable{
         Pipe p = (Pipe) o;
 
         // Compare the data members and return accordingly
-        return p.equals(_position);
+        return p._position.equals(_position);
     }
 
     public Point getPosition()
