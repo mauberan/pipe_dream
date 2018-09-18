@@ -129,6 +129,7 @@ public class Pipe extends Observable{
     }
 
     public void removeNeighborPipe(Directions neighborDirection)
+
     {
         _connectedPipes.remove(neighborDirection);
     }
