@@ -13,6 +13,8 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -22,6 +24,7 @@ import android.widget.Toast;
 
 import java.util.Dictionary;
 import java.util.Enumeration;
+import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 
@@ -39,20 +42,32 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 
+import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PIPE;
+
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
     GameBoard gameBoard = new GameBoard(7);
-    Map<Point,BoxButton> layoutBoard = new HashMap<Point,BoxButton>();
+    Dictionary<Point,BoxButton> layoutBoard = new Hashtable<>();
+
 
     @Override
     public void update(Observable observable, Object o) {
         if (!(observable instanceof GameBoard)) {
             return;
         }
-        Pipe currentPipe = gameBoard.getCurrentPipe();
-       Pipe.FlowStatus currentPipeFlowStatus =  (Pipe.FlowStatus)o;
+
+        Pipe.FlowStatus currentPipeFlowStatus =  (Pipe.FlowStatus)o;
+
        switch (currentPipeFlowStatus) {
            case FLOW_STARTED_IN_PIPE:
-               currentPipe.getPipeType();
+               MainActivity.this.runOnUiThread(new Runnable() {
+                   @Override
+                   public void run() {
+                       Pipe currentPipe = gameBoard.getCurrentPipe();
+                       BoxButton box = getBoxFromPipe(currentPipe);
+                       box.AnimateFlow(currentPipe.getFlowDirection());
+                   }
+               });
+
 //               currentPipe.g
                break;
            case FOUND_NEXT_PIPE:
@@ -67,13 +82,25 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     public void onClick(View view) {
+        //if flow started in pipe --> do nothing
+
+
         BoxButton box = (BoxButton) view;
+
+        if (box.getType() == Pipe.PipeType.START_DOWN || box.getType() == Pipe.PipeType.START_UP || box.getType() == Pipe.PipeType.START_LEFT || box.getType() == Pipe.PipeType.START_LEFT) {
+            return;
+        }
+
         Pipe.PipeType nextType = nextBar.OnClickAction();
+
+
         box.setType(nextType);
-        box.DrawPipe();
-        Toast.makeText(this, box.getPoint().toString(), Toast.LENGTH_LONG).show();
+        gameBoard.addPipeToBoard(box.getPoint(),box.getType());
+        box.AnimateClick();
 
+//        box.DrawPipe();
 
+//        Toast.makeText(this, box.getPoint().toString(), Toast.LENGTH_LONG).show()
     }
 
     @Override
@@ -83,19 +110,66 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         TextView title = findViewById(R.id.title_text_box);
         gameBoard.addObserver(this);
-        gameBoard.getFirstPipe();
-
+        Pipe first = gameBoard.getFirstPipe();
         title.setTypeface(tf);
-
         CreateBoard();
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
 
-        BoxButton boxi = getBoxFromPoint(new Point(2,2));
-        if (boxi != null) {
-            boxi.setType(Pipe.PipeType.TOP_LEFT);
-            boxi.DrawPipe();
-        }
+
+        BoxButton firstBox = getBoxFromPoint(first.getPosition());
+        firstBox.setType(first.getPipeType());
+        firstBox.DrawPipe();
+
+//        gameBoard.startGame();
+
+        BoxButton horiz = getBoxFromPoint(new Point(2,3));
+            horiz.setType(Pipe.PipeType.HORIZONTAL);
+
+
+        BoxButton topRight = getBoxFromPoint(new Point(3,3));
+        topRight.setType(Pipe.PipeType.TOP_RIGHT);
+
+//        BoxButton selected_pipe1 = getBoxFromPoint(new Point(1,3));
+//        selected_pipe1.setType(Pipe.PipeType.START_DOWN);
+
+        BoxButton topLeft = getBoxFromPoint(new Point(4,3));
+        topLeft.setType(Pipe.PipeType.TOP_LEFT);
+
+        BoxButton bottomLeft = getBoxFromPoint(new Point(4,4));
+        bottomLeft.setType(Pipe.PipeType.BOTTOM_LEFT);
+
+        BoxButton bottomRight = getBoxFromPoint(new Point(3,4));
+        bottomRight.setType(Pipe.PipeType.BOTTOM_RIGHT);
+
+        BoxButton selected_pipe5 = getBoxFromPoint(new Point(5,3));
+        selected_pipe5.setType(Pipe.PipeType.VERTICAL);
+        BoxButton selected_pipe6 = getBoxFromPoint(new Point(5,2));
+        selected_pipe6.setType(Pipe.PipeType.CROSS);
+        BoxButton selected_pipe7 = getBoxFromPoint(new Point(1,2));
+        selected_pipe7.setType(Pipe.PipeType.START_DOWN);
+        BoxButton selected_pipe8 = getBoxFromPoint(new Point(2,2));
+        selected_pipe8.setType(Pipe.PipeType.START_UP);
+        BoxButton selected_pipe9 = getBoxFromPoint(new Point(3,2));
+        selected_pipe9.setType(Pipe.PipeType.START_LEFT);
+        BoxButton selected_pipe10 = getBoxFromPoint(new Point(4,2));
+        selected_pipe10.setType(Pipe.PipeType.START_RIGHT);
+
+        topRight.DrawPipe();
+//        selected_pipe1.DrawPipe();
+        bottomLeft.DrawPipe();
+        bottomRight.DrawPipe();
+        topLeft.DrawPipe();
+
+        topLeft.AnimateFlow(Pipe.Directions.LEFT);
+//        selected_pipe5.DrawPipe();
+//        selected_pipe6.DrawPipe();
+//        selected_pipe7.DrawPipe();
+//        selected_pipe8.DrawPipe();
+//        selected_pipe9.DrawPipe();
+//        selected_pipe10.DrawPipe();
+
+//        selected_pipe.AnimateFlow(Pipe.Directions.UP);
     }
 
     public void CreateBoard() {
@@ -105,13 +179,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         boxContainerLayoutParams.weight = 1f;
         rowLinearLayoutParams.gravity = Gravity.FILL_HORIZONTAL;
         LinearLayout mainLinearLayout = findViewById(R.id.grid_linear);
-
-        //delete this
-        BoxButton special = new BoxButton(MainActivity.this);
-        special.setPoint(new Point(0, 0));
-        special.setType(Pipe.PipeType.TOP_LEFT);
-//        special.DrawPipe();
-//------------------------
 
         for (int j = 6; j > -1; j--) {
             LinearLayout row = new LinearLayout(MainActivity.this);
@@ -130,35 +197,24 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                 BoxButton newButton = new BoxButton(MainActivity.this);
 
-                //to delete entire if
-                if (i == 3 && j == 3) {
-
-//                    newButton.setOnClickListener(MainActivity.this);
-
-                    boxContainer.addView(special);
-
-                    continue;
-                }
-                //-----------------
 
                 newButton.setPoint(new Point(i, j));
                 newButton.setType(null);
                 newButton.setOnClickListener(MainActivity.this);
+                layoutBoard.put(newButton.getPoint(),newButton);
+
 
                 newButton.DrawPipe();
                 boxContainer.addView(newButton);
-                layoutBoard.put(newButton.getPoint(),newButton);
 
             }
             mainLinearLayout.addView(row);
             mainLinearLayout.invalidate();
         }
-        special.AnimateFlow(Pipe.Directions.LEFT); //TODO DELETE
 
     }
 
     public BoxButton getBoxFromPoint(Point point) {
-        LinearLayout layout = findViewById(R.id.grid_linear);
         BoxButton ret = layoutBoard.get(point);
         if (ret != null) {
             return ret;
@@ -169,11 +225,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-
+public BoxButton getBoxFromPipe(Pipe pipe) {
+    return getBoxFromPoint(pipe.getPosition());
+}
 
     class BoxButton extends ImageButton {
         Pipe.PipeType _type = null;
         Point _point = null;
+//        Dictionary<Pipe.Directions, AnimationDrawable> _animations = new Hashtable<>();
+
 
         public BoxButton(Context context) {
             super(context);
@@ -194,7 +254,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         public void DrawPipe() {
             if (_type != null) {
-                this.setImageResource(0);
+                this.setImageResource(android.R.color.transparent);
+                this.setScaleX(1);
+                this.setScaleY(1);
+                this.setRotation(0);
 
                 switch (_type) {
                     case TOP_LEFT:
@@ -224,9 +287,25 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     case VERTICAL:
                         this.setImageResource(R.drawable.vertical);
                         break;
+                    case START_UP:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(180);
+
+                        break;
+                    case START_DOWN:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+
+                        break;
+                    case START_LEFT:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(90);
+                        break;
+                    case START_RIGHT:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(270);
+                        break;
                 }
             } else {
-                this.setImageResource(0);
 
                 this.setImageResource(R.drawable.empty_box);
             }
@@ -248,8 +327,42 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             return _type;
         }
 
-        public void AnimateFlow(Pipe.Directions endDirection) {
+
+        public void AnimateClick() {
+            this.setImageResource(R.drawable.ic_wrench);
+
+
+            Animation a = new RotateAnimation(0.0f, 360.0f,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                    0.5f);
+            a.setRepeatCount(Animation.ABSOLUTE);
+            a.setDuration(110);
+
+            this.startAnimation(a);
+            a.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    DrawPipe();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+        }
+
+        public void AnimateFlow(final Pipe.Directions endDirection) {
             Pipe.PipeType type = getType();
+            this.setImageResource(android.R.color.transparent);
+            this.setScaleX(1);
+            this.setScaleY(1);
+            this.setRotation(0);
             if ((Pipe.AvailableDirections.get(type) & endDirection.getVal()) != 0) {
 
                 switch (type) {
@@ -257,11 +370,18 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                         this.setImageResource(R.drawable.corner_animation);
 
                         if (endDirection == Pipe.Directions.UP) {
+
                             this.setRotation(180);
 
+
+
+
                         } else {  //DIRECTION IS LEFT
-                            this.setRotation(90);
-                            this.setScaleX(-1);
+                            this.setRotation(270);
+
+//                            this.setScaleX(-1);
+                            this.setScaleY(-1);
+
                             this.setImageResource(R.drawable.corner_animation);
                         }
                         break;
@@ -314,24 +434,44 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                             this.setRotation(180);
                         }
                         break;
+                    case START_RIGHT:
+                        this.setImageResource(R.drawable.start_animation);
+                        this.setRotation(270);
+                        break;
+                    case START_LEFT:
+                        this.setImageResource(R.drawable.start_animation);
+                        this.setRotation(90);
+                        break;
+                    case START_UP:
+                        this.setImageResource(R.drawable.start_animation);
+                        this.setRotation(180);
+                        break;
+                    case START_DOWN:
+                        this.setImageResource(R.drawable.start_animation);
+                        break;
                 }
-                PipeAnimation anim = new PipeAnimation((AnimationDrawable) this.getDrawable()) {
+
+                PipeAnimation cad = new PipeAnimation(
+                        (AnimationDrawable) this.getDrawable()) {
+                    @Override
+                    public void onAnimationStart() {
+                Toast.makeText(MainActivity.this,endDirection.toString(), Toast.LENGTH_LONG).show();
+                    }
+
                     @Override
                     public void onAnimationFinish() {
 
-                    }
-
-                    @Override
-                    public void onAnimationStart() {
-
+//                                         Toast.makeText(MainActivity.this, "END", Toast.LENGTH_LONG).show();
                     }
                 };
-                Toast.makeText(MainActivity.this, "ANIM TIME: " + anim.getTotalDuration(), Toast.LENGTH_LONG).show();
+                this.setImageDrawable(cad);
+                ((AnimationDrawable) this.getDrawable()).start();
 
-             ((AnimationDrawable) this.getDrawable()).start();
+//                Toast.makeText(MainActivity.this, "ANIM TIME: " + anim.getTotalDuration(), Toast.LENGTH_LONG).show();
 
 
 //        }
+
             }
         }
     }
@@ -394,9 +534,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         }
 
-    }
 
- abstract class PipeAnimation extends AnimationDrawable {
+ public abstract class PipeAnimation extends AnimationDrawable {
 
      /**
       * Handles the animation callback.
@@ -405,19 +544,23 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
      public PipeAnimation(AnimationDrawable aniDrawable) {
          /* Add each frame to our animation drawable */
+//         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
+//             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
+//         }
+
+
+         //time manipulation
          for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
-             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
+             this.addFrame(aniDrawable.getFrame(i), 25);
          }
+         this.setOneShot(true);
+
      }
 
      @Override
      public void start() {
          super.start();
-         /*
-          * Call super.start() to call the base class start animation method.
-          * Then add a handler to call onAnimationFinish() when the total
-          * duration for the animation has passed
-          */
+
          mAnimationHandler = new Handler();
          mAnimationHandler.post(new Runnable() {
              @Override
@@ -456,3 +599,4 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
  }
 
+}
