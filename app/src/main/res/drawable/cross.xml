@@ -20,16 +20,16 @@
                 <item android:offset="1" android:color="#FF000000"/>
             </gradient>
         </aapt:attr>
-        <aapt:attr name="android:strokeColor">
-            <gradient
-                android:gradientRadius="249.99855"
-                android:centerX="249.6833"
-                android:centerY="249.64818"
-                android:type="radial">
-                <item android:offset="0" android:color="#000000"/>
-                <item android:offset="1" android:color="#000000"/>
-            </gradient>
-        </aapt:attr>
+        <!--<aapt:attr name="android:strokeColor">-->
+            <!--<gradient-->
+                <!--android:gradientRadius="249.99855"-->
+                <!--android:centerX="249.6833"-->
+                <!--android:centerY="249.64818"-->
+                <!--android:type="radial">-->
+                <!--<item android:offset="0" android:color="#000000"/>-->
+                <!--<item android:offset="1" android:color="#000000"/>-->
+            <!--</gradient>-->
+        <!--</aapt:attr>-->
     </path>
     <path
         android:pathData="M169,499.913L169,471.913A12,12 0,0 1,181 459.913L199,459.913L199,499.913L169,499.913Z"
