@@ -141,8 +141,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
 
-        BoxButton horiz = getBoxFromPoint(new Point(2,3));
-//            horiz.setType(Pipe.PipeType.VERTICAL);
+        BoxButton horiz = getBoxFromPoint(new Point(0,0));
+            horiz.setType(Pipe.PipeType.CROSS);
 
 //
 //        BoxButton topRight = getBoxFromPoint(new Point(3,3));
@@ -177,7 +177,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 ////        selected_pipe1.DrawPipe();
 //        bottomLeft.DrawPipe();
 //        bottomRight.DrawPipe();
-//        horiz.DrawPipe();
+        horiz.DrawPipe();
 //
 //        horiz.AnimateFlow(Pipe.Directions.DOWN);
 //        selected_pipe5.DrawPipe();
