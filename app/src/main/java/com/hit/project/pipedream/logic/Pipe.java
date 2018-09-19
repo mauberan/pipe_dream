@@ -182,6 +182,9 @@ public class Pipe extends Observable{
             } else {
                 //notify game board
                 notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                //remove link so we don't visit the same path again
+                nextPipe.removeNeighborPipe(_flowDirection._oppositeDirection);
+                removeNeighborPipe(_flowDirection);
                 //start flow in same direction
                 nextPipe.setFlowDirection(_flowDirection);
                 nextPipe.startFlow();
@@ -196,22 +199,9 @@ public class Pipe extends Observable{
                     continue;
                 }
                 notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
-                if (neighborPipe.getPipeType() == PipeType.HORIZONTAL || neighborPipe.getPipeType() == PipeType.VERTICAL || neighborPipe.getPipeType() == PipeType.CROSS)
-                {
-                    //same flow direction
-                    neighborPipe.setFlowDirection(_flowDirection);
-                    neighborPipe.startFlow();
-                    return;
-                } else {
-                    int newDirection = pipeEntry.getKey().getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
-                    for (Directions newFlowDirection : Directions.values()) {
-                        if (newFlowDirection.getVal() == newDirection) {
-                            neighborPipe.setFlowDirection(_flowDirection);
-                            neighborPipe.startFlow();
-                            return;
-                        }
-                    }
-                }
+                neighborPipe.setFlowDirection(pipeEntry.getKey());
+                neighborPipe.startFlow();
+                return;
             }
             notifyObservers(FlowStatus.END_OF_PIPE);
         }
