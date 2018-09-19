@@ -6,6 +6,7 @@ import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimationDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.NonNull;
@@ -13,10 +14,13 @@ import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
@@ -47,7 +51,7 @@ import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PI
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
     GameBoard gameBoard = new GameBoard(7);
     Map<Point,BoxButton> layoutBoard = new HashMap<>();
-
+    int required_blocks_for_level = 4;
 
     @Override
     public void update(Observable observable, Object o) {
@@ -71,11 +75,16 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 //               currentPipe.g
                break;
            case FOUND_NEXT_PIPE:
-        Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
-            //TODO: CREATE SCORE VIEW AND UPDATE IT HERE
+                 Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
+                //TODO: CREATE SCORE VIEW AND UPDATE IT HERE
                break;
            case END_OF_PIPE:
-                      Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
+               Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
+               try {
+                   Thread.sleep(1000);
+               } catch (InterruptedException e) {
+                   e.printStackTrace();
+               }
                ResetBoard();
 
                break;
@@ -87,7 +96,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     public void onClick(View view) {
-        //if flow started in pipe --> do nothing
 
         BoxButton box = (BoxButton) view;
 
@@ -114,10 +122,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
-        TextView title = findViewById(R.id.title_text_box);
-        gameBoard.addObserver(this);
+        // add api if here for lower versions
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
+//        getWindow().setStatusBarColor(Color.BLUE);
 
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            Window w = getWindow(); w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+        }
+
+        TextView title = findViewById(R.id.title_text_box);
         title.setTypeface(tf);
+        gameBoard.addObserver(this);
         CreateBoard();
         ResetBoard();
         nextBar.InitializeBlockBar();
@@ -126,9 +141,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
 
-//        BoxButton horiz = getBoxFromPoint(new Point(2,3));
-//            horiz.setType(Pipe.PipeType.HORIZONTAL);
-//
+        BoxButton horiz = getBoxFromPoint(new Point(2,3));
+//            horiz.setType(Pipe.PipeType.VERTICAL);
+
 //
 //        BoxButton topRight = getBoxFromPoint(new Point(3,3));
 //        topRight.setType(Pipe.PipeType.TOP_RIGHT);
@@ -144,7 +159,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 //
 //        BoxButton bottomRight = getBoxFromPoint(new Point(3,4));
 //        bottomRight.setType(Pipe.PipeType.BOTTOM_RIGHT);
-//
+
 //        BoxButton selected_pipe5 = getBoxFromPoint(new Point(5,3));
 //        selected_pipe5.setType(Pipe.PipeType.VERTICAL);
 //        BoxButton selected_pipe6 = getBoxFromPoint(new Point(5,2));
@@ -162,17 +177,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 ////        selected_pipe1.DrawPipe();
 //        bottomLeft.DrawPipe();
 //        bottomRight.DrawPipe();
-//        topLeft.DrawPipe();
+//        horiz.DrawPipe();
 //
-//        topLeft.AnimateFlow(Pipe.Directions.LEFT);
-////        selected_pipe5.DrawPipe();
-////        selected_pipe6.DrawPipe();
-////        selected_pipe7.DrawPipe();
-////        selected_pipe8.DrawPipe();
-////        selected_pipe9.DrawPipe();
-////        selected_pipe10.DrawPipe();
-//
-////        selected_pipe.AnimateFlow(Pipe.Directions.UP);
+//        horiz.AnimateFlow(Pipe.Directions.DOWN);
+//        selected_pipe5.DrawPipe();
+//        selected_pipe6.DrawPipe();
+//        selected_pipe7.DrawPipe();
+//        selected_pipe8.DrawPipe();
+//        selected_pipe9.DrawPipe();
+//        selected_pipe10.DrawPipe();
+
+//        selected_pipe.AnimateFlow(Pipe.Directions.UP);
     }
 
     public void CreateBoard() {
@@ -214,6 +229,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             mainLinearLayout.invalidate();
         }
 
+
     }
 
     public void ResetBoard() {
@@ -222,6 +238,25 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             box.setType(null);
             box.DrawPipe();
         }
+        LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+        LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
+        imageButtonLayoutParams.weight = 1f;
+        imageButtonLayoutParams.gravity = Gravity.CENTER;
+
+        requierdBlocksLayout.removeAllViews();
+
+        for (int i=0; i < required_blocks_for_level; i++) {
+            BoxButton requierdBlock = new BoxButton(MainActivity.this);
+            requierdBlock.setLayoutParams(imageButtonLayoutParams);
+            requierdBlock.setAdjustViewBounds(false);
+            requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
+            requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
+            requierdBlock.setPadding(3,3,3,3);
+            requierdBlock.DrawPipe();
+            requierdBlocksLayout.addView(requierdBlock);
+        }
+
+
         gameBoard.resetGame();
         Pipe first = gameBoard.getFirstPipe();
         BoxButton firstBox = getBoxFromPoint(first.getPosition());
@@ -383,14 +418,8 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                 switch (type) {
                     case TOP_LEFT:
                         this.setImageResource(R.drawable.corner_animation);
-
                         if (endDirection == Pipe.Directions.UP) {
-
                             this.setRotation(180);
-
-
-
-
                         } else {  //DIRECTION IS LEFT
                             this.setRotation(270);
 
@@ -402,32 +431,34 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                         break;
                     case TOP_RIGHT: //TODO FINISH THIS
                         this.setImageResource(R.drawable.corner_animation);
-                        this.setRotation(180);
-                        this.setScaleX(-1);
-                        this.setImageResource(R.drawable.corner_animation);
+
                         if (endDirection == Pipe.Directions.UP) {
-
+                            this.setRotation(180);
+                            this.setScaleX(-1);
                         } else {  //DIRECTION IS RIGHT
-
-                        }
-
-                        break;
-                    case BOTTOM_LEFT: //TODO: FINISH THIS
-                        this.setImageResource(R.drawable.corner_animation);
-                        if (endDirection == Pipe.Directions.DOWN) {
-
-                        } else {  //DIRECTION IS LEFT
-
-                        }
-                        this.setScaleX(-1);
-                        break;
-                    case BOTTOM_RIGHT: //TODO: FINISH THIS
-                        this.setImageResource(R.drawable.corner_animation);
-
-                        if (endDirection == Pipe.Directions.RIGHT) {
+                            this.setRotation(90);
                             this.setScaleX(-1);
                             this.setScaleY(-1);
 
+
+                        }
+
+                        break;
+                    case BOTTOM_LEFT:
+                        this.setImageResource(R.drawable.corner_animation);
+                        if (endDirection == Pipe.Directions.DOWN) {
+                            this.setRotation(0);
+                            this.setScaleX(-1);
+                        } else {  //DIRECTION IS LEFT
+                            this.setRotation(90);
+                        }
+                        break;
+                    case BOTTOM_RIGHT:
+                        this.setImageResource(R.drawable.corner_animation);
+
+                        if (endDirection == Pipe.Directions.RIGHT) {
+                            this.setRotation(90);
+                            this.setScaleY(-1);
                         }
                         break;
                     case CROSS:
@@ -440,7 +471,6 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                             this.setScaleY(-1);
                         }
 
-                        this.setRotation(90);
                         break;
                     case VERTICAL:
                         this.setImageResource(R.drawable.vertical_animation);
@@ -484,11 +514,7 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                 ((AnimationDrawable) this.getDrawable()).start();
 
 //                Toast.makeText(MainActivity.this, "ANIM TIME: " + anim.getTotalDuration(), Toast.LENGTH_LONG).show();
-
-
 //        }
-
-
         }
     }
 
@@ -514,10 +540,11 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
 
             public void InitializeBlockBar() {
                 for (int i = 0; i < 5; i++) {
+
                     BoxButton newBox = new BoxButton(MainActivity.this);
                     newBox.setType(getRandomPipeType());
                     newBox.DrawPipe();
-                    newBox.setBackgroundResource(R.drawable.border);
+                    newBox.setBackgroundResource(R.drawable.border_block_bar);
                     nextPipeQueue.add(newBox);
                 }
             }
@@ -527,6 +554,7 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
 
                 BoxButton newBox = new BoxButton(MainActivity.this);
                 newBox.setType(getRandomPipeType());
+
                 newBox.DrawPipe();
                 newBox.setBackgroundResource(R.drawable.border);
                 nextPipeQueue.add(newBox);
@@ -542,8 +570,11 @@ public BoxButton getBoxFromPipe(Pipe pipe) {
                 while (iter.hasNext()) {
                     View current = (View) iter.next();
                     nextBlockLayout.addView(current);
-                    // do something with current
                 }
+                    TextView point_bar = findViewById(R.id.points_text_view);
+                Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+point_bar.setTypeface(tf);
+point_bar.setTextSize(50);
 
             }
             public Pipe.PipeType PeekNextType() {
