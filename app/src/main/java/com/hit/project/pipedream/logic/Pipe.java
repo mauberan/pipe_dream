@@ -61,7 +61,7 @@ public class Pipe extends Observable{
 
     public enum FlowStatus {FOUND_NEXT_PIPE,END_OF_PIPE,FLOW_STARTED_IN_PIPE}
 
-    private boolean _flowStarted;
+    private int _numOfVisits;
     private Map<Directions, Pipe>  _connectedPipes;
     private Point _position;
     PipeType _pipeType;
@@ -85,7 +85,7 @@ public class Pipe extends Observable{
 
     public Pipe(Point position, PipeType pipeDirection)
     {
-        _flowStarted = false;
+        _numOfVisits = 0;
         _connectedPipes = new HashMap<>();
         _position = position;
         _pipeType = pipeDirection;
@@ -137,21 +137,10 @@ public class Pipe extends Observable{
     public void startFlow()
     {
         //mark flow started to block the user from removing this pipe
-        _flowStarted = true;
+        _numOfVisits += 1;
         //notify game board that flow has started in this pipe (start animation)
         setChanged();
         notifyObservers(FlowStatus.FLOW_STARTED_IN_PIPE);
-        //create task to execute when the pipe gets full
-/*        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                startNeighborsFlow();
-            }
-        };
-        //create the timer (on timeout will execute the task)
-        Timer timer = new Timer("flowTimer");
-        //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
-        timer.schedule(task,_timeToFullCapacity);*/
     }
 
     public void pipeIsFull()
@@ -175,7 +164,7 @@ public class Pipe extends Observable{
         if (_pipeType == PipeType.CROSS)
         {
             Pipe nextPipe = _connectedPipes.get(_flowDirection);
-            if (nextPipe == null || (nextPipe._pipeType != PipeType.CROSS && nextPipe._flowStarted))
+            if ( nextPipe == null || ( (nextPipe._pipeType != PipeType.CROSS) && (nextPipe._numOfVisits > 0) ) )
             {
                 //no neighbor matching the flow direction
                 notifyObservers(FlowStatus.END_OF_PIPE);
@@ -193,7 +182,7 @@ public class Pipe extends Observable{
         } else {
             for (Map.Entry<Directions, Pipe> pipeEntry : _connectedPipes.entrySet()) {
                 Pipe neighborPipe = pipeEntry.getValue();
-                if ((neighborPipe._flowStarted == true) && (neighborPipe._pipeType != PipeType.CROSS))
+                if ((neighborPipe._numOfVisits > 0) && (neighborPipe._pipeType != PipeType.CROSS))
                 {
                     //this neighbor was already visited and pipe type is nor cross (which allows more than one visit)
                     continue;
@@ -209,7 +198,12 @@ public class Pipe extends Observable{
 
     public boolean isRemovable()
     {
-        return _flowStarted == false;
+        return _numOfVisits == 0;
+    }
+
+    public int getNumOfVisits()
+    {
+        return _numOfVisits;
     }
 
     @Override
