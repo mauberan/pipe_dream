@@ -157,7 +157,6 @@ public class Pipe extends Observable{
             //no more linked pipes! end current game
             notifyObservers(FlowStatus.END_OF_PIPE);
             return;
-
         }
 
         //handle cross pipe differently from other pipes - may have more than one neighbor
@@ -169,16 +168,22 @@ public class Pipe extends Observable{
                 //no neighbor matching the flow direction
                 notifyObservers(FlowStatus.END_OF_PIPE);
             } else {
-                //notify game board
-                notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
-                //remove link so we don't visit the same path again
-                nextPipe.removeNeighborPipe(_flowDirection._oppositeDirection);
-                removeNeighborPipe(_flowDirection);
-                //start flow in same direction
-                nextPipe.setFlowDirection(_flowDirection);
-                nextPipe.startFlow();
+                //find direction by exit from pipe
+                int newDirection = _flowDirection.getOppositeDirection().getVal() ^ AvailableDirections.get(nextPipe.getPipeType());
+                for (Directions directionOption : Directions.values()) {
+                    if (directionOption.getVal() == newDirection) {
+                        //notify game board
+                        notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                        //remove link so we don't visit the same path again
+                        nextPipe.removeNeighborPipe(_flowDirection._oppositeDirection);
+                        removeNeighborPipe(_flowDirection);
+                        //start flow in same direction
+                        nextPipe.setFlowDirection(directionOption);
+                        nextPipe.startFlow();
+                        return;
+                    }
+                }
             }
-            return;
         } else {
             for (Map.Entry<Directions, Pipe> pipeEntry : _connectedPipes.entrySet()) {
                 Pipe neighborPipe = pipeEntry.getValue();
@@ -187,10 +192,24 @@ public class Pipe extends Observable{
                     //this neighbor was already visited and pipe type is nor cross (which allows more than one visit)
                     continue;
                 }
-                notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
-                neighborPipe.setFlowDirection(pipeEntry.getKey());
-                neighborPipe.startFlow();
-                return;
+                if (neighborPipe.getPipeType() == PipeType.HORIZONTAL || neighborPipe.getPipeType() == PipeType.VERTICAL || neighborPipe.getPipeType() == PipeType.CROSS)
+                {
+                    //same flow direction
+                    notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                    neighborPipe.setFlowDirection(_flowDirection);
+                    neighborPipe.startFlow();
+                    return;
+                } else {
+                    int newDirection = pipeEntry.getKey().getOppositeDirection().getVal() ^ AvailableDirections.get(neighborPipe.getPipeType());
+                    for (Directions directionOption : Directions.values()) {
+                        if (directionOption.getVal() == newDirection) {
+                            notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+                            neighborPipe.setFlowDirection(directionOption);
+                            neighborPipe.startFlow();
+                            return;
+                        }
+                    }
+                }
             }
             notifyObservers(FlowStatus.END_OF_PIPE);
         }

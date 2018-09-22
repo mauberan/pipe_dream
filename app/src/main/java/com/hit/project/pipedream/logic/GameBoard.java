@@ -9,9 +9,10 @@ import java.util.TimerTask;
 public class GameBoard extends Observable implements Observer {
     private int _rowColumnSize;
     private Pipe[][] _board;
-    private int _score;
+    private int _filledPipes;
     private Pipe _currentPipe;
     private Pipe _firstPipe;
+    private int _level;
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
@@ -22,8 +23,20 @@ public class GameBoard extends Observable implements Observer {
     {
         _board = new Pipe[rowColumnSize][rowColumnSize];
         _rowColumnSize = rowColumnSize;
-        _score = 0;
         _firstPipe = getRandomFirstPipe();
+        _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
+        _firstPipe.addObserver(this);
+        _level = 0;
+        _filledPipes = 0;
+    }
+
+    public void injectFirstPipe(Pipe firstPipe)
+    {
+        if (_firstPipe != null)
+        {
+            _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = null;
+        }
+        _firstPipe = firstPipe;
         _board[_firstPipe.getPosition().x][_firstPipe.getPosition().y] = _firstPipe;
         _firstPipe.addObserver(this);
     }
@@ -96,7 +109,7 @@ public class GameBoard extends Observable implements Observer {
 
     public int getScore()
     {
-        return _score;
+        return _filledPipes * Level.Levels[_level].getPointsPerPipe();
     }
 
     public boolean addPipeToBoard(Point position, Pipe.PipeType pipeType)
@@ -157,8 +170,12 @@ public class GameBoard extends Observable implements Observer {
 
     public void resetGame()
     {
+        if (_filledPipes >= Level.Levels[_level].getRequiredPipeLength())
+        {
+            _level += 1;
+        }
         //clear score
-        _score = 0;
+        _filledPipes = 0;
         //clear game board from old pipes
         for (Pipe[] row: _board)
         {
@@ -169,6 +186,11 @@ public class GameBoard extends Observable implements Observer {
         _board[_firstPipe.getPosition().getX()][_firstPipe.getPosition().getY()] = _firstPipe;
         _firstPipe.addObserver(this);
         _currentPipe = null;
+    }
+
+    public Level getCurrentLevel()
+    {
+        return Level.Levels[_level];
     }
 
     @Override
@@ -186,13 +208,14 @@ public class GameBoard extends Observable implements Observer {
         {
             case FLOW_STARTED_IN_PIPE:
                 //print debug information
-                System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),_score,pipe.getFlowDirection()));
+                System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),
+                        getScore(),pipe.getFlowDirection()));
                 notifyObservers(Pipe.FlowStatus.FLOW_STARTED_IN_PIPE);
+                _filledPipes += 1;
                 break;
             case FOUND_NEXT_PIPE:
                 System.out.println("Pipe is full, found the next linked pipe!");
                 //update score
-                _score += SCORE_PER_PIPE;
                 notifyObservers(Pipe.FlowStatus.FOUND_NEXT_PIPE);
                 break;
             case END_OF_PIPE:

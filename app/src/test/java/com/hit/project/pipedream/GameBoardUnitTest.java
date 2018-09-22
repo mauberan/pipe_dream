@@ -37,9 +37,10 @@ public class GameBoardUnitTest {
     public void testFlow()
     {
         //create path
-        boolean result = _board.addPipeToBoard(new Point(0,6), Pipe.PipeType.HORIZONTAL);
-        assertTrue("failed to add pipe (0,6)",result);
-        result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
+        Pipe firstPipe = new Pipe(new Point(0,6), Pipe.PipeType.START_RIGHT);
+        firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
+        _board.injectFirstPipe(firstPipe);
+        boolean result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
         assertTrue("failed to add pipe (1,6)",result);
         result = _board.addPipeToBoard(new Point(1,5), Pipe.PipeType.VERTICAL);
         assertTrue("failed to add pipe (1,5)",result);
@@ -51,11 +52,19 @@ public class GameBoardUnitTest {
         assertTrue("failed to add pipe (2,3)",result);
         result = _board.addPipeToBoard(new Point(3,3), Pipe.PipeType.HORIZONTAL);
         assertTrue("failed to add pipe (3,3)",result);
+        result = _board.addPipeToBoard(new Point(4,3), Pipe.PipeType.CROSS);
+        assertTrue("failed to add pipe (3,3)",result);
+        result = _board.addPipeToBoard(new Point(5,3), Pipe.PipeType.HORIZONTAL);
+        assertTrue("failed to add pipe (3,3)",result);
         //start flow in pipes
         _board.startGame();
         try {
             //wait until end of game
-            Thread.sleep( 60*1000);
+            Thread.sleep( 2*1000);
+            for (int i = 0; i < 10; i++)
+            {
+                _board.notifyPipeIsFull();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
@@ -65,9 +74,10 @@ public class GameBoardUnitTest {
     public void testJunctionFlow()
     {
         //create path
-        boolean result = _board.addPipeToBoard(new Point(0,6), Pipe.PipeType.HORIZONTAL);
-        assertTrue("failed to add pipe (0,6)",result);
-        result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
+        Pipe firstPipe = new Pipe(new Point(0,6), Pipe.PipeType.START_RIGHT);
+        firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
+        _board.injectFirstPipe(firstPipe);
+        boolean result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
         assertTrue("failed to add pipe (1,6)",result);
         result = _board.addPipeToBoard(new Point(1,5), Pipe.PipeType.VERTICAL);
         assertTrue("failed to add pipe (1,5)",result);
@@ -91,7 +101,11 @@ public class GameBoardUnitTest {
         _board.startGame();
         try {
             //wait until end of game
-            Thread.sleep( 15*1000);
+            Thread.sleep( 2*1000);
+            for (int i = 0; i < 15; i++)
+            {
+                _board.notifyPipeIsFull();
+            }
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
