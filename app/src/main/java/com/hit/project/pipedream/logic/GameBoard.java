@@ -3,8 +3,6 @@ package com.hit.project.pipedream.logic;
 import java.util.Observable;
 import java.util.Random;
 import java.util.Observer;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class GameBoard extends Observable implements Observer {
     private int _rowColumnSize;
@@ -84,18 +82,7 @@ public class GameBoard extends Observable implements Observer {
             return;
         }
         _currentPipe = _firstPipe;
-        //create task to execute when the pipe gets full
-        TimerTask task = new TimerTask() {
-            @Override
-            public void run() {
-                _firstPipe.startFlow();
-            }
-        };
-        //create the timer (on timeout will execute the task)
-        Timer timer = new Timer("flowTimer");
-        //schedule task to run after _timeToFullCapacity * 1000 (seconds to milliseconds)
-        timer.schedule(task,TIME_BEFORE_FLOW);
-        System.out.println(String.format("Will start flow in:%d ms position:%s",TIME_BEFORE_FLOW,_currentPipe.getPosition()));
+        _firstPipe.startFlow();
     }
 
     public void notifyPipeIsFull()
@@ -210,8 +197,8 @@ public class GameBoard extends Observable implements Observer {
                 //print debug information
                 System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),
                         getScore(),pipe.getFlowDirection()));
-                notifyObservers(Pipe.FlowStatus.FLOW_STARTED_IN_PIPE);
                 _filledPipes += 1;
+                notifyObservers(Pipe.FlowStatus.FLOW_STARTED_IN_PIPE);
                 break;
             case FOUND_NEXT_PIPE:
                 System.out.println("Pipe is full, found the next linked pipe!");
@@ -219,8 +206,8 @@ public class GameBoard extends Observable implements Observer {
                 notifyObservers(Pipe.FlowStatus.FOUND_NEXT_PIPE);
                 break;
             case END_OF_PIPE:
-                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
                 System.out.println("Pipe is full, reached to the end of the pipe!");
+                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
                 break;
                 default:
         }

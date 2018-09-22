@@ -58,16 +58,12 @@ public class GameBoardUnitTest {
         assertTrue("failed to add pipe (3,3)",result);
         //start flow in pipes
         _board.startGame();
-        try {
-            //wait until end of game
-            Thread.sleep( 2*1000);
-            for (int i = 0; i < 10; i++)
-            {
-                _board.notifyPipeIsFull();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+
+        for (int i = 0; i < 10; i++)
+        {
+            _board.notifyPipeIsFull();
         }
+
     }
 
     @Test
@@ -99,15 +95,9 @@ public class GameBoardUnitTest {
         assertTrue("failed to add pipe (4,4)",result);
         //start flow in pipes
         _board.startGame();
-        try {
-            //wait until end of game
-            Thread.sleep( 2*1000);
-            for (int i = 0; i < 15; i++)
-            {
-                _board.notifyPipeIsFull();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        for (int i = 0; i < 15; i++)
+        {
+            _board.notifyPipeIsFull();
         }
     }
 }
