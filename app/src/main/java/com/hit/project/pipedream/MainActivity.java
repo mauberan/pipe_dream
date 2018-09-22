@@ -62,9 +62,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     int player_score = 0;
     int levelPointAmount = 100;
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
-
-
-
+    
     @Override
     public void update(Observable observable, Object o) {
         if (!(observable instanceof GameBoard)) {
@@ -130,11 +128,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         if (result) {
             box.setType(nextBar.OnClickAction());
             box.AnimateClick();
-
         }
-//        box.DrawPipe();
-
-//        Toast.makeText(this, box.getPoint().toString(), Toast.LENGTH_LONG).show()
     }
 
     @Override
@@ -153,62 +147,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         CreateBoard();
 
-
         WelcomeDialog();
 
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
 
-
-
-
-        BoxButton horiz = getBoxFromPoint(new Point(0,0));
-            horiz.setType(Pipe.PipeType.CROSS);
-
-//
-//        BoxButton topRight = getBoxFromPoint(new Point(3,3));
-//        topRight.setType(Pipe.PipeType.TOP_RIGHT);
-//
-////        BoxButton selected_pipe1 = getBoxFromPoint(new Point(1,3));
-////        selected_pipe1.setType(Pipe.PipeType.START_DOWN);
-//
-//        BoxButton topLeft = getBoxFromPoint(new Point(4,3));
-//        topLeft.setType(Pipe.PipeType.TOP_LEFT);
-//
-//        BoxButton bottomLeft = getBoxFromPoint(new Point(4,4));
-//        bottomLeft.setType(Pipe.PipeType.BOTTOM_LEFT);
-//
-//        BoxButton bottomRight = getBoxFromPoint(new Point(3,4));
-//        bottomRight.setType(Pipe.PipeType.BOTTOM_RIGHT);
-
-//        BoxButton selected_pipe5 = getBoxFromPoint(new Point(5,3));
-//        selected_pipe5.setType(Pipe.PipeType.VERTICAL);
-//        BoxButton selected_pipe6 = getBoxFromPoint(new Point(5,2));
-//        selected_pipe6.setType(Pipe.PipeType.CROSS);
-//        BoxButton selected_pipe7 = getBoxFromPoint(new Point(1,2));
-//        selected_pipe7.setType(Pipe.PipeType.START_DOWN);
-//        BoxButton selected_pipe8 = getBoxFromPoint(new Point(2,2));
-//        selected_pipe8.setType(Pipe.PipeType.START_UP);
-//        BoxButton selected_pipe9 = getBoxFromPoint(new Point(3,2));
-//        selected_pipe9.setType(Pipe.PipeType.START_LEFT);
-//        BoxButton selected_pipe10 = getBoxFromPoint(new Point(4,2));
-//        selected_pipe10.setType(Pipe.PipeType.START_RIGHT);
-//
-//        topRight.DrawPipe();
-////        selected_pipe1.DrawPipe();
-//        bottomLeft.DrawPipe();
-//        bottomRight.DrawPipe();
-        horiz.DrawPipe();
-//
-//        horiz.AnimateFlow(Pipe.Directions.DOWN);
-//        selected_pipe5.DrawPipe();
-//        selected_pipe6.DrawPipe();
-//        selected_pipe7.DrawPipe();
-//        selected_pipe8.DrawPipe();
-//        selected_pipe9.DrawPipe();
-//        selected_pipe10.DrawPipe();
-
-//        selected_pipe.AnimateFlow(Pipe.Directions.UP);
     }
     public void GivePoints() {
         TextView scoreTextView = findViewById(R.id.points_text_view);
@@ -216,14 +159,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         scoreTextView.setText(player_score + "");
     }
 
-    public void RemovePipeFromRemaining() {
-
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
-        WelcomeDialog();
+//        WelcomeDialog();
     }
 
     public void CreateBoard() {
@@ -642,7 +581,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             highScoreButton.setBackgroundResource(R.drawable.menu_button_border);
 
 
-
             Button quitButton = new Button(MainActivity.this);
             quitButton.setLayoutParams(params);
             quitButton.setText("Quit Game");
@@ -669,21 +607,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 }
             });
             highScoreButton.setOnClickListener(new View.OnClickListener() {
-                                                   @Override
-                                                   public void onClick(View view) {
-                                                       Dialog.dismiss();
-                                                       Intent intent = new Intent(MainActivity.this,ActivityScores.class);
-                                                       startActivity(intent);
-                                                   }
+               @Override
+               public void onClick(View view) {
+                   Dialog.dismiss();
+                   Intent intent = new Intent(MainActivity.this,ActivityScores.class);
+                   startActivity(intent);
+               }
             });
 
-                        quitButton.setOnClickListener(new View.OnClickListener() {
+            quitButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View view) {
                         Dialog.dismiss();
                         finish();
                     }
-                        });
+            });
         }
 
         public void GameOverDialog(boolean isRecord) {
@@ -892,66 +830,42 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
  }
 
-// class RequierdBoxesBar {
-//        int requiredPipes = 0;
-//
-//
-//        public void RequierdBoxes() {
-//
-//        }
-//
-//        public void setNewRequiredAmount (int newAmount) {
-//            requiredPipes = newAmount;
-//            updateDisplay();
-//
-//        }
-//
-//        private void updateDisplay() {
-//            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-//
-//            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
-//            imageButtonLayoutParams.weight = 1f;
-//            imageButtonLayoutParams.gravity = Gravity.CENTER;
-//
-//            requierdBlocksLayout.removeAllViews();
-//
-//            for (int i=0; i < requiredPipes; i++) {
-//                BoxButton requierdBlock = new BoxButton(MainActivity.this);
-//                requierdBlock.setLayoutParams(imageButtonLayoutParams);
-//                requierdBlock.setAdjustViewBounds(false);
-//                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
-//                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
-//                requierdBlock.setPadding(3,3,3,3);
-//                requierdBlock.DrawPipe();
-//                requierdBlocksLayout.addView(requierdBlock);
-//            }
-//        }
-//
-//        public void DecrementAmount() {
-//            requiredPipes--;
-//            updateDisplay();
-//        }
-//
-//    }
+ class RequierdBoxesBar {
+        int requiredPipes = 0;
 
+        public void RequierdBoxes() {
 
-// class PointBar {
-//        TextView scoreTextView = findViewById(R.id.points_text_view);
-//        int _levelPoints= 100;
-//
-//                 PointBar(int levelPs) {
-//                    _levelPoints = levelPs;
-//                    player_score = 0;
-//
-//                }
-//        public void GivePoints() {
-//                     player_score += _levelPoints;
-//                     scoreTextView.setText(player_score);
-//        }
-//
-//        public void setLevelPoints(int newLevelPoints) {
-//                     _levelPoints = newLevelPoints;
-//        }
-//    }
+        }
 
+        public void setNewRequiredAmount (int newAmount) {
+            requiredPipes = newAmount;
+            updateDisplay();
+        }
+
+        private void updateDisplay() {
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+
+            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
+            imageButtonLayoutParams.weight = 1f;
+            imageButtonLayoutParams.gravity = Gravity.CENTER;
+
+            requierdBlocksLayout.removeAllViews();
+
+            for (int i=0; i < requiredPipes; i++) {
+                BoxButton requierdBlock = new BoxButton(MainActivity.this);
+                requierdBlock.setLayoutParams(imageButtonLayoutParams);
+                requierdBlock.setAdjustViewBounds(false);
+                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
+                requierdBlock.setPadding(3,3,3,3);
+                requierdBlock.DrawPipe();
+                requierdBlocksLayout.addView(requierdBlock);
+            }
+        }
+
+        public void DecrementAmount() {
+            requiredPipes--;
+            updateDisplay();
+        }
+    }
 }
