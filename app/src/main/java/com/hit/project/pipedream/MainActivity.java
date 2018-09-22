@@ -52,6 +52,8 @@ import java.util.ListIterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PIPE;
 
@@ -62,6 +64,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     int player_score = 0;
     int levelPointAmount = 100;
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
+    TimerTask timerTasks;
+    Timer gameTimer;
     
     @Override
     public void update(Observable observable, Object o) {
@@ -147,6 +151,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         CreateBoard();
 
+        gameTimer = new Timer("Game Timer");
+
         WelcomeDialog();
 
         nextBar.InitializeBlockBar();
@@ -226,7 +232,23 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         BoxButton firstBox = getBoxFromPoint(first.getPosition());
         firstBox.setType(first.getPipeType());
         firstBox.DrawPipe();
-        gameBoard.startGame();
+        timerTasks = new TimerTask() {
+            @Override
+            public void run() {
+
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        gameBoard.startGame();
+
+                    }
+                });
+
+            }
+        };
+
+        gameTimer.schedule(timerTasks,8*1000);
+
     }
 
     public BoxButton getBoxFromPoint(Point point) {
