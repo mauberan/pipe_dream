@@ -3,6 +3,7 @@ package com.hit.project.pipedream;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -57,9 +58,11 @@ import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PI
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
     GameBoard gameBoard = new GameBoard(7);
     Map<Point,BoxButton> layoutBoard = new HashMap<>();
-    int required_blocks_for_level = 4;
+    int required_blocks_for_level = 20;
     int player_score = 0;
     int levelPointAmount = 100;
+    RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
+
 
 
     @Override
@@ -77,12 +80,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                    public void run() {
                        Pipe currentPipe = gameBoard.getCurrentPipe();
                        BoxButton box = getBoxFromPipe(currentPipe);
-                       box.AnimateFlow(currentPipe.getFlowDirection());
+
+                       box.AnimateFlow(currentPipe.getFlowDirection(),currentPipe.getNumOfVisits());
                    }
                });
                 System.out.println(String.format("pipe location:%s flow direction:%s",gameBoard.getCurrentPipe().getPosition(),gameBoard.getCurrentPipe().getFlowDirection()));
 //               currentPipe.g
                GivePoints();
+               requierdBlocks.DecrementAmount();
+
 
                break;
            case FOUND_NEXT_PIPE:
@@ -135,9 +141,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        // add api if here for lower versions
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-//        getWindow().setStatusBarColor(Color.BLUE);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow(); w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
@@ -149,6 +152,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         gameBoard.addObserver(this);
 
         CreateBoard();
+
+
         WelcomeDialog();
 
         nextBar.InitializeBlockBar();
@@ -215,6 +220,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        WelcomeDialog();
+    }
+
     public void CreateBoard() {
         LinearLayout.LayoutParams rowLinearLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         LinearLayout.LayoutParams boxContainerLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
@@ -238,8 +249,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 row.addView(boxContainer);
 
 
-                BoxButton newButton = new BoxButton(MainActivity.this);
 
+
+                BoxButton newButton = new BoxButton(MainActivity.this);
+                newButton.setScaleX(1);
+                newButton.setScaleY(1);
+                newButton.setRotation(0);
 
                 newButton.setPoint(new Point(i, j));
                 newButton.setOnClickListener(MainActivity.this);
@@ -253,7 +268,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             mainLinearLayout.addView(row);
             mainLinearLayout.invalidate();
         }
-
+        requierdBlocks.setNewRequiredAmount(required_blocks_for_level);
+        requierdBlocks.updateDisplay();
 
     }
 
@@ -263,24 +279,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             box.setType(null);
             box.DrawPipe();
         }
-        LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-        LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
-        imageButtonLayoutParams.weight = 1f;
-        imageButtonLayoutParams.gravity = Gravity.CENTER;
-
-        requierdBlocksLayout.removeAllViews();
-
-        for (int i=0; i < required_blocks_for_level; i++) {
-            BoxButton requierdBlock = new BoxButton(MainActivity.this);
-            requierdBlock.setLayoutParams(imageButtonLayoutParams);
-            requierdBlock.setAdjustViewBounds(false);
-            requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
-            requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
-            requierdBlock.setPadding(3,3,3,3);
-            requierdBlock.DrawPipe();
-            requierdBlocksLayout.addView(requierdBlock);
-        }
-
+        requierdBlocks.setNewRequiredAmount(required_blocks_for_level);
+        requierdBlocks.updateDisplay();
 
         gameBoard.resetGame();
         Pipe first = gameBoard.getFirstPipe();
@@ -305,7 +305,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         return getBoxFromPoint(pipe.getPosition());
     }
 
-        class BoxButton extends ImageButton {
+    class BoxButton extends ImageButton {
             Pipe.PipeType _type = null;
             Point _point = null;
     //        Dictionary<Pipe.Directions, AnimationDrawable> _animations = new Hashtable<>();
@@ -432,7 +432,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 });
             }
 
-            public void AnimateFlow(final Pipe.Directions endDirection) {
+            public void AnimateFlow(final Pipe.Directions endDirection, int numberOfVisits) {
                 Pipe.PipeType type = getType();
                 this.setImageResource(android.R.color.transparent);
                 this.setScaleX(1);
@@ -484,7 +484,44 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                             }
                             break;
                         case CROSS:
-                            this.setImageResource(R.drawable.cross_first_flow_animation); //TODO: FIGURE OUT THIS SHIT
+                            if (numberOfVisits > 1) {
+                                this.setImageResource(R.drawable.cross_second_flow_animation);
+                                if (endDirection == Pipe.Directions.RIGHT) {
+                                    this.setRotation(0);
+                                }
+                                if (endDirection == Pipe.Directions.LEFT) {
+                                    this.setRotation(180);
+
+                                }
+                                if (endDirection == Pipe.Directions.UP) {
+                                    this.setRotation(270);
+
+                                }
+                                if (endDirection == Pipe.Directions.DOWN) {
+                                    this.setRotation(90);
+
+                                }
+
+                            }
+                            else {
+                                this.setImageResource(R.drawable.cross_first_flow_animation);
+                                if (endDirection == Pipe.Directions.RIGHT) {
+                                    this.setRotation(270);
+
+                                }
+                                if (endDirection == Pipe.Directions.LEFT) {
+                                    this.setRotation(90);
+
+                                }
+                                if (endDirection == Pipe.Directions.UP) {
+                                    this.setRotation(180);
+                                }
+                                if (endDirection == Pipe.Directions.DOWN) {
+                                    this.setRotation(0);
+
+                                }
+                            }
+
                             break;
                         case HORIZONTAL:
                             this.setImageResource(R.drawable.vertical_animation);
@@ -521,8 +558,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                             (AnimationDrawable) this.getDrawable()) {
                         @Override
                         public void onAnimationStart() {
-    //                Toast.makeText(MainActivity.this,endDirection.toString(), Toast.LENGTH_LONG).show();
+                    Toast.makeText(MainActivity.this,endDirection.toString(), Toast.LENGTH_LONG).show();
                             System.out.println("ANIM START");
+                            System.out.println(endDirection.toString());
+
                         }
 
                         @Override
@@ -603,6 +642,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             highScoreButton.setBackgroundResource(R.drawable.menu_button_border);
 
 
+
             Button quitButton = new Button(MainActivity.this);
             quitButton.setLayoutParams(params);
             quitButton.setText("Quit Game");
@@ -631,7 +671,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             highScoreButton.setOnClickListener(new View.OnClickListener() {
                                                    @Override
                                                    public void onClick(View view) {
-                                                       //TODO: FINISH THIS
+                                                       Dialog.dismiss();
+                                                       Intent intent = new Intent(MainActivity.this,ActivityScores.class);
+                                                       startActivity(intent);
                                                    }
             });
 
@@ -709,12 +751,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             });
 
         }
-
-
-
-
-
-
 
     class NextBlockBar {
             Queue<BoxButton> nextPipeQueue = new LinkedList<>();
@@ -855,6 +891,49 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
      public abstract void onAnimationStart();
 
  }
+
+ class RequierdBoxesBar {
+        int requiredPipes = 0;
+
+
+        public void RequierdBoxes() {
+
+        }
+
+        public void setNewRequiredAmount (int newAmount) {
+            requiredPipes = newAmount;
+            updateDisplay();
+
+        }
+
+        private void updateDisplay() {
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+
+            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
+            imageButtonLayoutParams.weight = 1f;
+            imageButtonLayoutParams.gravity = Gravity.CENTER;
+
+            requierdBlocksLayout.removeAllViews();
+
+            for (int i=0; i < requiredPipes; i++) {
+                BoxButton requierdBlock = new BoxButton(MainActivity.this);
+                requierdBlock.setLayoutParams(imageButtonLayoutParams);
+                requierdBlock.setAdjustViewBounds(false);
+                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
+                requierdBlock.setPadding(3,3,3,3);
+                requierdBlock.DrawPipe();
+                requierdBlocksLayout.addView(requierdBlock);
+            }
+        }
+
+        public void DecrementAmount() {
+            requiredPipes--;
+            updateDisplay();
+        }
+
+    }
+
 
 // class PointBar {
 //        TextView scoreTextView = findViewById(R.id.points_text_view);

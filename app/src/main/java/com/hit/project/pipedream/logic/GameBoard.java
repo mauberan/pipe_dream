@@ -15,7 +15,7 @@ public class GameBoard extends Observable implements Observer {
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
-    private static final int TIME_BEFORE_FLOW = 8*1000;
+    private static final int TIME_BEFORE_FLOW = 12*1000;
     /* END CONSTANTS */
 
     public GameBoard(int rowColumnSize)
