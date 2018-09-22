@@ -167,23 +167,29 @@ public class Pipe extends Observable{
             {
                 //no neighbor matching the flow direction
                 notifyObservers(FlowStatus.END_OF_PIPE);
-            } else {
+                return;
+            } else if (nextPipe._pipeType == PipeType.CROSS)
+            {
+                nextPipe.setFlowDirection(_flowDirection);
+            }
+            else {
                 //find direction by exit from pipe
                 int newDirection = _flowDirection.getOppositeDirection().getVal() ^ AvailableDirections.get(nextPipe.getPipeType());
                 for (Directions directionOption : Directions.values()) {
                     if (directionOption.getVal() == newDirection) {
-                        //notify game board
-                        notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
-                        //remove link so we don't visit the same path again
-                        nextPipe.removeNeighborPipe(_flowDirection._oppositeDirection);
-                        removeNeighborPipe(_flowDirection);
                         //start flow in same direction
                         nextPipe.setFlowDirection(directionOption);
-                        nextPipe.startFlow();
-                        return;
+                        break;
                     }
                 }
             }
+            //notify game board
+            notifyObservers(FlowStatus.FOUND_NEXT_PIPE);
+            //remove link so we don't visit the same path again
+            nextPipe.removeNeighborPipe(_flowDirection._oppositeDirection);
+            removeNeighborPipe(_flowDirection);
+            nextPipe.startFlow();
+            return;
         } else {
             for (Map.Entry<Directions, Pipe> pipeEntry : _connectedPipes.entrySet()) {
                 Pipe neighborPipe = pipeEntry.getValue();
@@ -211,8 +217,8 @@ public class Pipe extends Observable{
                     }
                 }
             }
-            notifyObservers(FlowStatus.END_OF_PIPE);
         }
+        notifyObservers(FlowStatus.END_OF_PIPE);
     }
 
     public boolean isRemovable()

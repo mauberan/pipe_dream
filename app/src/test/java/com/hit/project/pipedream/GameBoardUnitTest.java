@@ -54,7 +54,9 @@ public class GameBoardUnitTest {
         assertTrue("failed to add pipe (3,3)",result);
         result = _board.addPipeToBoard(new Point(4,3), Pipe.PipeType.CROSS);
         assertTrue("failed to add pipe (3,3)",result);
-        result = _board.addPipeToBoard(new Point(5,3), Pipe.PipeType.HORIZONTAL);
+        result = _board.addPipeToBoard(new Point(5,3), Pipe.PipeType.CROSS);
+        assertTrue("failed to add pipe (3,3)",result);
+        result = _board.addPipeToBoard(new Point(6,3), Pipe.PipeType.HORIZONTAL);
         assertTrue("failed to add pipe (3,3)",result);
         //start flow in pipes
         _board.startGame();
