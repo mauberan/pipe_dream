@@ -892,47 +892,47 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
  }
 
- class RequierdBoxesBar {
-        int requiredPipes = 0;
-
-
-        public void RequierdBoxes() {
-
-        }
-
-        public void setNewRequiredAmount (int newAmount) {
-            requiredPipes = newAmount;
-            updateDisplay();
-
-        }
-
-        private void updateDisplay() {
-            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-
-            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
-            imageButtonLayoutParams.weight = 1f;
-            imageButtonLayoutParams.gravity = Gravity.CENTER;
-
-            requierdBlocksLayout.removeAllViews();
-
-            for (int i=0; i < requiredPipes; i++) {
-                BoxButton requierdBlock = new BoxButton(MainActivity.this);
-                requierdBlock.setLayoutParams(imageButtonLayoutParams);
-                requierdBlock.setAdjustViewBounds(false);
-                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
-                requierdBlock.setPadding(3,3,3,3);
-                requierdBlock.DrawPipe();
-                requierdBlocksLayout.addView(requierdBlock);
-            }
-        }
-
-        public void DecrementAmount() {
-            requiredPipes--;
-            updateDisplay();
-        }
-
-    }
+// class RequierdBoxesBar {
+//        int requiredPipes = 0;
+//
+//
+//        public void RequierdBoxes() {
+//
+//        }
+//
+//        public void setNewRequiredAmount (int newAmount) {
+//            requiredPipes = newAmount;
+//            updateDisplay();
+//
+//        }
+//
+//        private void updateDisplay() {
+//            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+//
+//            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
+//            imageButtonLayoutParams.weight = 1f;
+//            imageButtonLayoutParams.gravity = Gravity.CENTER;
+//
+//            requierdBlocksLayout.removeAllViews();
+//
+//            for (int i=0; i < requiredPipes; i++) {
+//                BoxButton requierdBlock = new BoxButton(MainActivity.this);
+//                requierdBlock.setLayoutParams(imageButtonLayoutParams);
+//                requierdBlock.setAdjustViewBounds(false);
+//                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
+//                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
+//                requierdBlock.setPadding(3,3,3,3);
+//                requierdBlock.DrawPipe();
+//                requierdBlocksLayout.addView(requierdBlock);
+//            }
+//        }
+//
+//        public void DecrementAmount() {
+//            requiredPipes--;
+//            updateDisplay();
+//        }
+//
+//    }
 
 
 // class PointBar {
