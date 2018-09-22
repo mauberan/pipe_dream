@@ -80,7 +80,8 @@
                 android:src="@drawable/fast_forward"
                 android:scaleType="fitCenter"
                 android:background="@android:color/transparent"
-                android:padding="10dp"/>
+                android:padding="10dp"
+                android:id="@+id/fast_forward_button"/>
 
         <TextView
             android:layout_width="0dp"

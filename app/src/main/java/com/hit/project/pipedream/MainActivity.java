@@ -63,6 +63,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     int required_blocks_for_level = 20;
     int player_score = 0;
     int levelPointAmount = 100;
+    int levelStartInterval = 8*1000;
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
     TimerTask timerTasks;
     Timer gameTimer;
@@ -149,6 +150,19 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         title.setTypeface(tf);
         gameBoard.addObserver(this);
 
+        ImageButton fastForward = findViewById(R.id.fast_forward_button);
+        fastForward.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (gameTimer != null) {
+                    gameTimer.cancel();
+                    gameTimer= null;
+                    gameBoard.startGame();
+
+                }
+            }
+        });
+
         CreateBoard();
 
         gameTimer = new Timer("Game Timer");
@@ -157,6 +171,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
+
+
 
     }
     public void GivePoints() {
@@ -240,14 +256,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     @Override
                     public void run() {
                         gameBoard.startGame();
+                        gameTimer = null;
 
                     }
                 });
 
             }
         };
-
-        gameTimer.schedule(timerTasks,8*1000);
+        gameTimer = new Timer();
+        gameTimer.schedule(timerTasks,levelStartInterval);
 
     }
 
