@@ -157,9 +157,14 @@ public class GameBoard extends Observable implements Observer {
 
     public void resetGame()
     {
-        if (_filledPipes >= Level.Levels[_level].getRequiredPipeLength())
+        if (shouldLoadNextLevel())
         {
             _level += 1;
+            if (_level >= Level.Levels.length)
+            {
+                _level = 0;
+                System.out.println("User has finished the game! Set current level to level:0");
+            }
         }
         //clear score
         _filledPipes = 0;
@@ -207,10 +212,28 @@ public class GameBoard extends Observable implements Observer {
                 break;
             case END_OF_PIPE:
                 System.out.println("Pipe is full, reached to the end of the pipe!");
-                notifyObservers(Pipe.FlowStatus.END_OF_PIPE);
+                if (shouldLoadNextLevel())
+                {
+                    System.out.println("Player has finished the level successfully");
+                    if (_level == (Level.Levels.length-1))
+                    {
+                        notifyObservers(Pipe.FlowStatus.NO_MORE_LEVELS);
+                    } else {
+                        notifyObservers(Pipe.FlowStatus.NEXT_LEVEL);
+                    }
+
+                } else {
+                    System.out.println("Player did nit finished the level successfully");
+                    notifyObservers(Pipe.FlowStatus.GAMEOVER);
+                }
                 break;
                 default:
         }
+    }
+
+    private boolean shouldLoadNextLevel()
+    {
+        return _filledPipes >= Level.Levels[_level].getRequiredPipeLength();
     }
 
     public Pipe getCurrentPipe()

@@ -59,7 +59,7 @@ public class Pipe extends Observable{
         }
     }
 
-    public enum FlowStatus {FOUND_NEXT_PIPE,END_OF_PIPE,FLOW_STARTED_IN_PIPE}
+    public enum FlowStatus {FOUND_NEXT_PIPE,GAMEOVER,FLOW_STARTED_IN_PIPE,NEXT_LEVEL,END_OF_PIPE,NO_MORE_LEVELS}
 
     private int _numOfVisits;
     private Map<Directions, Pipe>  _connectedPipes;

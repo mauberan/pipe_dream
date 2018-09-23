@@ -36,36 +36,40 @@ public class GameBoardUnitTest {
     @Test
     public void testFlow()
     {
-        //create path
-        Pipe firstPipe = new Pipe(new Point(0,6), Pipe.PipeType.START_RIGHT);
-        firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
-        _board.injectFirstPipe(firstPipe);
-        boolean result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
-        assertTrue("failed to add pipe (1,6)",result);
-        result = _board.addPipeToBoard(new Point(1,5), Pipe.PipeType.VERTICAL);
-        assertTrue("failed to add pipe (1,5)",result);
-        result = _board.addPipeToBoard(new Point(1,4), Pipe.PipeType.VERTICAL);
-        assertTrue("failed to add pipe (1,4)",result);
-        result = _board.addPipeToBoard(new Point(1,3), Pipe.PipeType.TOP_RIGHT);
-        assertTrue("failed to add pipe (1,3)",result);
-        result = _board.addPipeToBoard(new Point(2,3), Pipe.PipeType.HORIZONTAL);
-        assertTrue("failed to add pipe (2,3)",result);
-        result = _board.addPipeToBoard(new Point(3,3), Pipe.PipeType.HORIZONTAL);
-        assertTrue("failed to add pipe (3,3)",result);
-        result = _board.addPipeToBoard(new Point(4,3), Pipe.PipeType.CROSS);
-        assertTrue("failed to add pipe (3,3)",result);
-        result = _board.addPipeToBoard(new Point(5,3), Pipe.PipeType.CROSS);
-        assertTrue("failed to add pipe (3,3)",result);
-        result = _board.addPipeToBoard(new Point(6,3), Pipe.PipeType.HORIZONTAL);
-        assertTrue("failed to add pipe (3,3)",result);
-        //start flow in pipes
-        _board.startGame();
-
-        for (int i = 0; i < 10; i++)
+        for (int j = 0; j < 3; j++)
         {
-            _board.notifyPipeIsFull();
-        }
+            //create path
+            Pipe firstPipe = new Pipe(new Point(0,6), Pipe.PipeType.START_RIGHT);
+            firstPipe.setFlowDirection(Pipe.Directions.RIGHT);
+            _board.injectFirstPipe(firstPipe);
+            boolean result = _board.addPipeToBoard(new Point(1,6), Pipe.PipeType.BOTTOM_LEFT);
+            assertTrue("failed to add pipe (1,6)",result);
+            result = _board.addPipeToBoard(new Point(1,5), Pipe.PipeType.VERTICAL);
+            assertTrue("failed to add pipe (1,5)",result);
+            result = _board.addPipeToBoard(new Point(1,4), Pipe.PipeType.VERTICAL);
+            assertTrue("failed to add pipe (1,4)",result);
+            result = _board.addPipeToBoard(new Point(1,3), Pipe.PipeType.TOP_RIGHT);
+            assertTrue("failed to add pipe (1,3)",result);
+            result = _board.addPipeToBoard(new Point(2,3), Pipe.PipeType.HORIZONTAL);
+            assertTrue("failed to add pipe (2,3)",result);
+            result = _board.addPipeToBoard(new Point(3,3), Pipe.PipeType.HORIZONTAL);
+            assertTrue("failed to add pipe (3,3)",result);
+            result = _board.addPipeToBoard(new Point(4,3), Pipe.PipeType.CROSS);
+            assertTrue("failed to add pipe (3,3)",result);
+            result = _board.addPipeToBoard(new Point(5,3), Pipe.PipeType.CROSS);
+            assertTrue("failed to add pipe (3,3)",result);
+            result = _board.addPipeToBoard(new Point(6,3), Pipe.PipeType.HORIZONTAL);
+            assertTrue("failed to add pipe (3,3)",result);
+            //start flow in pipes
+            _board.startGame();
 
+            for (int i = 0; i < 10; i++)
+            {
+                _board.notifyPipeIsFull();
+            }
+
+            _board .resetGame();
+        }
     }
 
     @Test
