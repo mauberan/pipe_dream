@@ -329,13 +329,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     } else {  //DIRECTION IS LEFT
                         this.setRotation(270);
 
-                        //                            this.setScaleX(-1);
                         this.setScaleY(-1);
 
                         this.setImageResource(R.drawable.corner_animation);
                     }
                     break;
-                case TOP_RIGHT: //TODO FINISH THIS
+                case TOP_RIGHT:
                     this.setImageResource(R.drawable.corner_animation);
 
                     if (endDirection == Pipe.Directions.UP) {
@@ -440,12 +439,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     (AnimationDrawable) this.getDrawable(),levelSpeedPerFrame) {
                 @Override
                 public void onAnimationStart() {
-
+                System.out.println("ANIM STARTED");
                 }
 
                 @Override
                 public void onAnimationFinish(){
-                    System.out.println("ANIM FINISHED");
+                    System.out.println("ANIM STARTED");
 
                     gameBoard.notifyPipeIsFull();
                 }
@@ -594,6 +593,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     public void onBackPressed() {
+        SaveGame();
         MainDialog();
     }
 
@@ -753,19 +753,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void ResetBoard() {
-        for (Map.Entry<Point,BoxButton> entry: layoutBoard.entrySet()) {
-            BoxButton box = entry.getValue();
-            box.setType(null);
-            box.DrawPipe();
-        }
+
         requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
         requierdBlocks.updateDisplay();
 
         gameBoard.resetGame();
-        Pipe first = gameBoard.getFirstPipe();
-        BoxButton firstBox = getBoxFromPoint(first.getPosition());
-        firstBox.setType(first.getPipeType());
-        firstBox.DrawPipe();
+        DisplayGame();
         timerTasks = new TimerTask() {
             @Override
             public void run() {
@@ -835,6 +828,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             fis = openFileInput("blocks_left");
             levelRequiredBlocks = fis.read();
             fis.close();
+
+            gameBoard.startGame();
 
 
         }catch (IOException e) {
