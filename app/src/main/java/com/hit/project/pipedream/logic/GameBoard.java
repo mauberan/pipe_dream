@@ -11,6 +11,7 @@ public class GameBoard extends Observable implements Observer {
     private Pipe _currentPipe;
     private Pipe _firstPipe;
     private int _level;
+    private boolean _isInGame;
 
     /* CONSTANTS */
     private static final int SCORE_PER_PIPE = 50;
@@ -26,6 +27,7 @@ public class GameBoard extends Observable implements Observer {
         _firstPipe.addObserver(this);
         _level = 0;
         _filledPipes = 0;
+        _isInGame = false;
     }
 
     public void injectFirstPipe(Pipe firstPipe)
@@ -82,6 +84,7 @@ public class GameBoard extends Observable implements Observer {
             return;
         }
         _currentPipe = _firstPipe;
+        _isInGame = true;
         _firstPipe.startFlow();
     }
 
@@ -178,6 +181,7 @@ public class GameBoard extends Observable implements Observer {
         _board[_firstPipe.getPosition().getX()][_firstPipe.getPosition().getY()] = _firstPipe;
         _firstPipe.addObserver(this);
         _currentPipe = null;
+        _isInGame = false;
     }
 
     public Level getCurrentLevel()
@@ -211,6 +215,8 @@ public class GameBoard extends Observable implements Observer {
                 notifyObservers(Pipe.FlowStatus.FOUND_NEXT_PIPE);
                 break;
             case END_OF_PIPE:
+                //update isInGame flag as there are no more pipes
+                _isInGame = false;
                 System.out.println("Pipe is full, reached to the end of the pipe!");
                 if (shouldLoadNextLevel())
                 {
@@ -229,6 +235,11 @@ public class GameBoard extends Observable implements Observer {
                 break;
                 default:
         }
+    }
+
+    public boolean getIsInGame()
+    {
+        return _isInGame;
     }
 
     private boolean shouldLoadNextLevel()
