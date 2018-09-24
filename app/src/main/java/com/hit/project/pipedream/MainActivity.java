@@ -76,6 +76,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     int levelStartInterval = 8*1000;
     int levelSpeedPerFrame = 50;
     int currentLevel = 1;
+    boolean isRunning = false;
 
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
     TimerTask timerTasks;
@@ -144,6 +145,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         public Drawable SkipAnimation() {
             return this.getFrame(getNumberOfFrames()-1);
         }
+
 
     }
 
@@ -443,10 +445,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 }
 
                 @Override
-                public void onAnimationFinish(){
-                    System.out.println("ANIM STARTED");
-
-                    gameBoard.notifyPipeIsFull();
+                public void onAnimationFinish() {
+                    System.out.println("ANIM FINISHED");
+                    if (isRunning) {
+                        gameBoard.notifyPipeIsFull();
+                    }
                 }
             };
             this.setImageDrawable(animation);
@@ -545,6 +548,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             this.setImageDrawable(animation.SkipAnimation());
         }
 
+
     }
     
     @Override
@@ -577,8 +581,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 //                 Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
                 //TODO: CREATE SCORE VIEW AND UPDATE IT HERE
                break;
-           case END_OF_PIPE:
-//               Toast.makeText(this, "GAME OVER", Toast.LENGTH_LONG).show();
+           case GAMEOVER:
                this.GameOverDialog(false);
                try {
                    Thread.sleep(500);
@@ -593,8 +596,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     public void onBackPressed() {
-        SaveGame();
-        MainDialog();
+        PauseGame();
+//        MainDialog();
     }
 
     @Override
@@ -628,7 +631,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         TextView title = findViewById(R.id.title_text_box);
         title.setTypeface(tf);
-        gameBoard.addObserver(this);
 
         ImageButton fastForward = findViewById(R.id.fast_forward_button);
         fastForward.setOnClickListener(new View.OnClickListener() {
@@ -675,16 +677,26 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     @Override
     protected void onResume() {
         super.onResume();
+
         LoadGameFromMemory();
         DisplayGame();
-        gameBoard.startGame();
+        gameBoard.addObserver(this);
+        isRunning = true;
+        if (gameBoard.getIsInGame())
+        {
+            Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
+            BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
+            currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(),currentFlowingPipe.getNumOfVisits());
+        }
+//        gameBoard.startGame();
+
 
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        SaveGame();
+        PauseGame();
 
     }
 
@@ -779,6 +791,24 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
 
+
+
+    }
+
+    public void PauseGame() {
+
+
+        if (gameBoard.getIsInGame()) {
+
+            System.out.println("GAME PAUSED");
+            Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
+            BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
+            AnimationDrawable animation = (AnimationDrawable)currentFlowingBox.getDrawable();
+            isRunning = false;
+            animation.stop();
+        }
+
+        SaveGame();
 
 
     }
