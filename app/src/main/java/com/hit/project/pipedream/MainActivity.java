@@ -32,6 +32,9 @@ import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -70,12 +73,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     GameBoard gameBoard = new GameBoard(7);
     Map<Point,BoxButton> layoutBoard = new HashMap<>();
 
-    int player_score = 0;
-    int levelRequiredBlocks = 20;
-    int levelPointAmount = 100;
-    int levelStartInterval = 8*1000;
-    int levelSpeedPerFrame = 50;
-    int currentLevel = 1;
+//    int player_score = 0;
+//    int levelRequiredBlocks = 20;
+//    int levelPointAmount = 100;
+//    int levelStartInterval = 8*1000;
+//    int levelSpeedPerFrame = 50;
+//    int currentLevel = 1;
     boolean isRunning = false;
 
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
@@ -667,16 +670,16 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-    public void GivePoints() {
-        TextView scoreTextView = findViewById(R.id.points_text_view);
-        player_score += levelPointAmount;
-        scoreTextView.setText(player_score + "");
-    }
+//    public void GivePoints() {
+//        TextView scoreTextView = findViewById(R.id.points_text_view);
+//        player_score += levelPointAmount;
+//        scoreTextView.setText(player_score + "");
+//    }
 
 
     @Override
-    protected void onResume() {
-        super.onResume();
+    protected void onStart() {
+        super.onStart();
 
         LoadGameFromMemory();
         DisplayGame();
@@ -764,7 +767,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-    public void ResetBoard() {
+    public void StartNewGame() {
 
         requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
         requierdBlocks.updateDisplay();
@@ -833,6 +836,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             fos.close();
             fos = openFileOutput("blocks_left", MODE_PRIVATE);
             fos.write(levelRequiredBlocks);
+            fos.close();
+            fos = openFileOutput("isRunning", MODE_PRIVATE);
+            DataOutputStream dos = new DataOutputStream(fos);
+            dos.writeBoolean(isRunning);
+            dos.close();
 
 
         } catch (FileNotFoundException e) {
@@ -844,22 +852,39 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     public void LoadGameFromMemory() {
         try {
-            FileInputStream fis = openFileInput("gameBoard");
-            ObjectInputStream ois = new ObjectInputStream(fis);
-            gameBoard = (GameBoard) ois.readObject();
-            fis.close();
+            File file = new File("gameBoard");
+            if (file.exists()) {
+                FileInputStream fis = openFileInput("gameBoard");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                gameBoard = (GameBoard) ois.readObject();
 
+                fis.close();
+
+                file.delete();
+            }else {
+                gameBoard = new GameBoard(7);
+                return;
+            }
 
             //TODO CHANGE POINT HANDLING TO GAMEBOARD POINTS
-            fis = openFileInput("player_points");
+            FileInputStream fis = openFileInput("player_points");
             player_score = fis.read();
             fis.close();
+            file = new File("player_points");
+            file.delete();
 
             fis = openFileInput("blocks_left");
             levelRequiredBlocks = fis.read();
             fis.close();
+            file = new File("blocks_left");
+            file.delete();
 
-            gameBoard.startGame();
+            fis = openFileInput("isRunning");
+            DataInputStream dis = new DataInputStream(fis);
+            isRunning = dis.readBoolean();
+            dis.close();
+            file = new File("isRunning");
+            file.delete();
 
 
         }catch (IOException e) {
