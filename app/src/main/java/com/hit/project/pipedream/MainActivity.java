@@ -2,6 +2,7 @@ package com.hit.project.pipedream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
@@ -441,7 +442,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
 
             PipeAnimation animation = new PipeAnimation(
-                    (AnimationDrawable) this.getDrawable(),levelSpeedPerFrame) {
+                    (AnimationDrawable) this.getDrawable(),gameBoard.getCurrentLevel().getFlowTimeInPipe()) {
                 @Override
                 public void onAnimationStart() {
                 System.out.println("ANIM STARTED");
@@ -538,7 +539,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
 
             PipeAnimation animation = new PipeAnimation(
-                    (AnimationDrawable) this.getDrawable(),levelSpeedPerFrame) {
+                    (AnimationDrawable) this.getDrawable(),gameBoard.getCurrentLevel().getFlowTimeInPipe()) {
                 @Override
                 public void onAnimationStart() {
 
@@ -575,7 +576,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                });
                 System.out.println(String.format("pipe location:%s flow direction:%s",gameBoard.getCurrentPipe().getPosition(),gameBoard.getCurrentPipe().getFlowDirection()));
 //               currentPipe.g
-               GivePoints();
+               UpdatePointBar();
                requierdBlocks.DecrementAmount();
 
 
@@ -645,7 +646,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     gameBoard.startGame();
 
                 }
-                levelSpeedPerFrame = 15;
+//                levelSpeedPerFrame = 15;
 
             }
 
@@ -670,18 +671,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-//    public void GivePoints() {
-//        TextView scoreTextView = findViewById(R.id.points_text_view);
-//        player_score += levelPointAmount;
-//        scoreTextView.setText(player_score + "");
-//    }
+    public void UpdatePointBar() {
+        TextView scoreTextView = findViewById(R.id.points_text_view);
+        scoreTextView.setText(gameBoard.getScore() + "");
+    }
 
 
     @Override
     protected void onStart() {
         super.onStart();
+        MainDialog();
 
-        LoadGameFromMemory();
         DisplayGame();
         gameBoard.addObserver(this);
         isRunning = true;
@@ -759,7 +759,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 }
             }
         }
-        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
+        requierdBlocks.setNewRequiredAmount(gameBoard.getLeftPipesToComplete());
         requierdBlocks.updateDisplay();
 
         CreatePointsBar();
@@ -769,7 +769,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     public void StartNewGame() {
 
-        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
+        requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
         requierdBlocks.updateDisplay();
 
         gameBoard.resetGame();
@@ -790,7 +790,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
         };
         gameTimer = new Timer();
-        gameTimer.schedule(timerTasks,levelStartInterval);
+        gameTimer.schedule(timerTasks,gameBoard.getCurrentLevel().getTimeBeforeFlow() * 1000);
 
 
 
@@ -816,14 +816,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-    public void StartLevel(int level) {
-
-    }
 
 
-    public void StartNewGame() {
 
-    }
+
 
     public void SaveGame() {
         try {
@@ -831,12 +827,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             ObjectOutputStream oos = new ObjectOutputStream(fos);
             oos.writeObject(gameBoard);
             oos.close();
-            fos = openFileOutput("player_points", MODE_PRIVATE);
-            fos.write(player_score);
-            fos.close();
-            fos = openFileOutput("blocks_left", MODE_PRIVATE);
-            fos.write(levelRequiredBlocks);
-            fos.close();
+
             fos = openFileOutput("isRunning", MODE_PRIVATE);
             DataOutputStream dos = new DataOutputStream(fos);
             dos.writeBoolean(isRunning);
@@ -850,7 +841,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         }
     }
 
-    public void LoadGameFromMemory() {
+    public boolean LoadGameFromMemory() {
         try {
             File file = new File("gameBoard");
             if (file.exists()) {
@@ -863,23 +854,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 file.delete();
             }else {
                 gameBoard = new GameBoard(7);
-                return;
+                return false;
             }
 
-            //TODO CHANGE POINT HANDLING TO GAMEBOARD POINTS
-            FileInputStream fis = openFileInput("player_points");
-            player_score = fis.read();
-            fis.close();
-            file = new File("player_points");
-            file.delete();
-
-            fis = openFileInput("blocks_left");
-            levelRequiredBlocks = fis.read();
-            fis.close();
-            file = new File("blocks_left");
-            file.delete();
-
-            fis = openFileInput("isRunning");
+            FileInputStream fis = openFileInput("isRunning");
             DataInputStream dis = new DataInputStream(fis);
             isRunning = dis.readBoolean();
             dis.close();
@@ -892,6 +870,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         }catch (ClassNotFoundException e) {
 
         }
+       return true;
     }
 
     public BoxButton getBoxFromPoint(Point point) {
@@ -944,16 +923,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             );
             params.setMargins(0, 0, 0, 40);
 
+        LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
 
-            Button continueButton = new Button(MainActivity.this);
-        continueButton.setLayoutParams(params);
-        continueButton.setText("Continue");
-        continueButton.setPadding(40,40,40,40);
-        continueButton.setTypeface(tf);
-        continueButton.setTextSize(20);
-        continueButton.setGravity(Gravity.CENTER);
-        continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-        continueButton.setBackgroundResource(R.drawable.menu_button_border);
+
+                Button continueButton = new Button(MainActivity.this);
+                continueButton.setLayoutParams(params);
+                continueButton.setText("Continue");
+                continueButton.setPadding(40, 40, 40, 40);
+                continueButton.setTypeface(tf);
+                continueButton.setTextSize(20);
+                continueButton.setGravity(Gravity.CENTER);
+                continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                continueButton.setBackgroundResource(R.drawable.menu_button_border);
+                dialogMainLinearLayout.addView(continueButton);
+
+
 
             Button newGameButton = new Button(MainActivity.this);
             newGameButton.setLayoutParams(params);
@@ -988,29 +972,30 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             quitButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
             quitButton.setBackgroundResource(R.drawable.menu_button_border);
 
-            LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
+
+            if (LoadGameFromMemory()) {
+
+                dialogMainLinearLayout.addView(continueButton);
+
+            }
             dialogMainLinearLayout.addView(newGameButton);
-            dialogMainLinearLayout.addView(continueButton);
             dialogMainLinearLayout.addView(highScoreButton);
             dialogMainLinearLayout.addView(quitButton);
 
 
             builder.setView(gameOverDialog);
             final AlertDialog Dialog = builder.show();
+
+
+
             newGameButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                   ResetBoard ();
+                   StartNewGame ();
                     Dialog.dismiss();
                 }
             });
-            continueButton.setOnClickListener(new View.OnClickListener() {
-                      @Override
-                      public void onClick(View view) {
-                          onResume();
-                          Dialog.dismiss();
-                      }
-                  });
+
 
                     highScoreButton.setOnClickListener(new View.OnClickListener() {
                         @Override
@@ -1028,6 +1013,14 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                         finish();
                     }
             });
+
+        continueButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                onResume();
+                Dialog.dismiss();
+            }
+        });
         }
 
     public void GameOverDialog(boolean isRecord) {
@@ -1060,7 +1053,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             LinearLayout pointsAndIconLine = new LinearLayout(MainActivity.this,null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
             pointsAndIconLine.setOrientation(LinearLayout.HORIZONTAL);
 
-            points_text_view.setText("Your score: " + player_score);
+            points_text_view.setText("Your score: " + gameBoard.getScore());
             points_text_view.setGravity(Gravity.LEFT);
             points_text_view.setPadding(10,10,10,20);
             points_text_view.setTextSize(20);
@@ -1089,7 +1082,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             tryAgianButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ResetBoard();
+                    StartNewGame();
                     Dialog.dismiss();
                 }
             });
@@ -1169,7 +1162,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             point_bar.setTextSize(50);
             point_bar.setGravity(Gravity.LEFT);
             point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-            point_bar.setText(player_score+"");
+            point_bar.setText(gameBoard.getScore()+"");
         }
 
 }
