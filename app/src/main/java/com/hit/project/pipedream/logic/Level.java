@@ -3,21 +3,21 @@ package com.hit.project.pipedream.logic;
 public class Level {
 
 
-    public static Level[] Levels = {new Level(5,10,50,LevelDifficulty.EASY,1000),
-            new Level(4,10,50,LevelDifficulty.EASY,1000),
-            new Level(5,10,50,LevelDifficulty.EASY,1000),
-            new Level(6,10,50,LevelDifficulty.EASY,1000),
-            new Level(7,10,50,LevelDifficulty.EASY,1000),
-            new Level(8,10,100,LevelDifficulty.MEDIUM,700),
-            new Level(8,10,100,LevelDifficulty.MEDIUM,700),
-            new Level(9,10,100,LevelDifficulty.MEDIUM,700),
-            new Level(9,10,100,LevelDifficulty.MEDIUM,700),
-            new Level(10,10,100,LevelDifficulty.MEDIUM,700),
-            new Level(11,10,120,LevelDifficulty.HARD,400),
-            new Level(11,10,120,LevelDifficulty.HARD,400),
-            new Level(12,10,120,LevelDifficulty.HARD,400),
-            new Level(12,10,120,LevelDifficulty.HARD,400),
-            new Level(13,10,120,LevelDifficulty.HARD,400)};
+    public static Level[] Levels = {new Level(5,10,50,LevelDifficulty.EASY,60),
+            new Level(4,10,50,LevelDifficulty.EASY,60),
+            new Level(5,10,50,LevelDifficulty.EASY,60),
+            new Level(6,10,50,LevelDifficulty.EASY,60),
+            new Level(7,10,50,LevelDifficulty.EASY,60),
+            new Level(8,10,100,LevelDifficulty.MEDIUM,40),
+            new Level(8,10,100,LevelDifficulty.MEDIUM,40),
+            new Level(9,10,100,LevelDifficulty.MEDIUM,40),
+            new Level(9,10,100,LevelDifficulty.MEDIUM,40),
+            new Level(10,10,100,LevelDifficulty.MEDIUM,40),
+            new Level(11,10,120,LevelDifficulty.HARD,30),
+            new Level(11,10,120,LevelDifficulty.HARD,30),
+            new Level(12,10,120,LevelDifficulty.HARD,30),
+            new Level(12,10,120,LevelDifficulty.HARD,30),
+            new Level(13,10,120,LevelDifficulty.HARD,30)};
 
     public enum LevelDifficulty {
         EASY, MEDIUM, HARD
