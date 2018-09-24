@@ -248,6 +248,11 @@ public class GameBoard extends Observable implements Observer,Serializable {
         return _filledPipes >= Level.Levels[_level].getRequiredPipeLength();
     }
 
+    public int getLeftPipesToComplete()
+    {
+        return Level.Levels[_level].getRequiredPipeLength() - _filledPipes;
+    }
+
     public Pipe getCurrentPipe()
     {
         return _currentPipe;
