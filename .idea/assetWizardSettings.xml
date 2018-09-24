@@ -62,8 +62,8 @@
                         <option name="values">
                           <map>
                             <entry key="assetSourceType" value="FILE" />
-                            <entry key="outputName" value="ic_new_record" />
-                            <entry key="sourceFile" value="$USER_HOME$/Documents/PipeDream/dialog pictures/new record.svg" />
+                            <entry key="outputName" value="ic_requierd_pipe_thumb" />
+                            <entry key="sourceFile" value="$USER_HOME$/Documents/PipeDream/pipes/requierd_pipe_thumb.svg" />
                           </map>
                         </option>
                       </PersistentState>

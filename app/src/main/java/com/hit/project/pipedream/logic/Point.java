@@ -1,6 +1,8 @@
 package com.hit.project.pipedream.logic;
 
-public class Point {
+import java.io.Serializable;
+
+public class Point implements Serializable {
 
     int x;
     int y;

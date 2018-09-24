@@ -1,10 +1,11 @@
 package com.hit.project.pipedream.logic;
 
+import java.io.Serializable;
 import java.util.Observable;
 import java.util.Random;
 import java.util.Observer;
 
-public class GameBoard extends Observable implements Observer {
+public class GameBoard extends Observable implements Observer,Serializable {
     private int _rowColumnSize;
     private Pipe[][] _board;
     private int _filledPipes;
@@ -252,4 +253,7 @@ public class GameBoard extends Observable implements Observer {
         return _currentPipe;
     }
 
+    public Pipe getPipeByPoint(Point point) {
+        return _board[point.getX()][point.getY()];
+    }
 }

@@ -5,9 +5,11 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimationDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +32,13 @@ import android.widget.Space;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutput;
+import java.io.ObjectOutputStream;
 import java.util.Dictionary;
 import java.util.Enumeration;
 import java.util.Hashtable;
@@ -60,13 +69,484 @@ import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PI
 public class MainActivity extends Activity implements View.OnClickListener , Observer{
     GameBoard gameBoard = new GameBoard(7);
     Map<Point,BoxButton> layoutBoard = new HashMap<>();
-    int required_blocks_for_level = 20;
+
     int player_score = 0;
+    int levelRequiredBlocks = 20;
     int levelPointAmount = 100;
     int levelStartInterval = 8*1000;
+    int levelSpeedPerFrame = 50;
+    int currentLevel = 1;
+
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
     TimerTask timerTasks;
     Timer gameTimer;
+
+    public abstract class PipeAnimation extends AnimationDrawable {
+
+        Handler mAnimationHandler;
+
+        public PipeAnimation(AnimationDrawable aniDrawable,int levelFlowTimePerFrame) {
+            /* Add each frame to our animation drawable */
+//         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
+//             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
+//         }
+            int i = 0;
+//         for (; i < 18; i++) {
+//                 this.addFrame(aniDrawable.getFrame(i), 0);
+//
+//         }
+
+            //time manipulation
+            for (; i < aniDrawable.getNumberOfFrames(); i++) {
+
+                this.addFrame(aniDrawable.getFrame(i), levelFlowTimePerFrame);
+
+            }
+            this.setOneShot(true);
+
+        }
+
+        @Override
+        public void start() {
+            super.start();
+
+            mAnimationHandler = new Handler();
+            mAnimationHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    onAnimationStart();
+                }
+            });
+            mAnimationHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    onAnimationFinish();
+                }
+            }, getTotalDuration());
+
+        }
+
+        public int getTotalDuration() {
+
+            int iDuration = 0;
+
+            for (int i = 0; i < this.getNumberOfFrames(); i++) {
+                iDuration += this.getDuration(i);
+            }
+
+            return iDuration;
+        }
+
+        public abstract void onAnimationFinish();
+
+        public abstract void onAnimationStart();
+
+        public Drawable SkipAnimation() {
+            return this.getFrame(getNumberOfFrames()-1);
+        }
+
+    }
+
+    public class RequierdBoxesBar {
+        int requiredPipes = 0;
+
+        public void RequierdBoxes() {
+
+        }
+
+        public void setNewRequiredAmount (int newAmount) {
+            requiredPipes = newAmount;
+            updateDisplay();
+        }
+
+        private void updateDisplay() {
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+
+            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(65, 65);
+            imageButtonLayoutParams.weight = 1f;
+            imageButtonLayoutParams.gravity = Gravity.LEFT;
+
+
+            requierdBlocksLayout.removeAllViews();
+
+            for (int i=0; i < requiredPipes; i++) {
+                ImageView thumb = new ImageView(MainActivity.this);
+                thumb.setLayoutParams(imageButtonLayoutParams);
+                thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb);
+                thumb.setPadding(4,0,4,0);
+                thumb.setForegroundGravity(Gravity.LEFT);
+                requierdBlocksLayout.addView(thumb);
+
+            }
+        }
+
+        public void DecrementAmount() {
+            requiredPipes--;
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+            requierdBlocksLayout.removeViewAt(0);
+        }
+    }
+
+    public class BoxButton extends ImageButton {
+        Pipe.PipeType _type = null;
+        Point _point = null;
+        //        Dictionary<Pipe.Directions, AnimationDrawable> _animations = new Hashtable<>();
+
+
+        public BoxButton(Context context) {
+            super(context);
+            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+            imageButtonLayoutParams.weight = 1f;
+            imageButtonLayoutParams.gravity = Gravity.CENTER;
+
+            this.setFocusableInTouchMode(false);
+            this.setAdjustViewBounds(true);
+            this.setBaselineAlignBottom(false);
+            this.setCropToPadding(true);
+            this.setScaleType(ImageButton.ScaleType.FIT_XY);
+            this.setBackgroundColor(Color.TRANSPARENT);
+            this.setLayoutParams(imageButtonLayoutParams);
+            this.setPadding(0, 0, 0, 0);
+
+        }
+
+        public void DrawPipe() {
+            if (_type != null) {
+                this.setImageResource(android.R.color.transparent);
+                this.setScaleX(1);
+                this.setScaleY(1);
+                this.setRotation(0);
+
+                switch (_type) {
+                    case TOP_LEFT:
+                        this.setImageResource(R.drawable.corner);
+                        this.setRotation(90);
+                        this.setScaleX(-1);
+                        break;
+                    case TOP_RIGHT:
+                        this.setImageResource(R.drawable.corner);
+                        this.setRotation(180);
+                        this.setScaleX(-1);
+                        break;
+                    case BOTTOM_LEFT:
+                        this.setImageResource(R.drawable.corner);
+                        this.setScaleX(-1);
+                        break;
+                    case BOTTOM_RIGHT:
+                        this.setImageResource(R.drawable.corner);
+                        break;
+                    case CROSS:
+                        this.setImageResource(R.drawable.cross);
+                        break;
+                    case HORIZONTAL:
+                        this.setImageResource(R.drawable.vertical);
+                        this.setRotation(90);
+                        break;
+                    case VERTICAL:
+                        this.setImageResource(R.drawable.vertical);
+                        break;
+                    case START_UP:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(180);
+
+                        break;
+                    case START_DOWN:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+
+                        break;
+                    case START_LEFT:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(90);
+                        break;
+                    case START_RIGHT:
+                        this.setImageResource(R.drawable.ic_start_pipe);
+                        this.setRotation(270);
+                        break;
+                }
+            } else {
+
+                this.setImageResource(R.drawable.empty_box);
+            }
+        }
+
+        public void setPoint(Point point) {
+            this._point = point;
+        }
+
+        public Point getPoint() {
+            return this._point;
+        }
+
+        public void setType(Pipe.PipeType type) {
+            this._type = type;
+        }
+
+        public Pipe.PipeType getType() {
+            return _type;
+        }
+
+
+        public void AnimateClick() {
+            this.setImageResource(R.drawable.ic_wrench);
+
+
+            Animation a = new RotateAnimation(0.0f, 360.0f,
+                    Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
+                    0.5f);
+            a.setRepeatCount(Animation.ABSOLUTE);
+            a.setDuration(110);
+
+            this.startAnimation(a);
+            a.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    DrawPipe();
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+        }
+
+        public void AnimateFlow(final Pipe.Directions endDirection, int numberOfVisits) {
+            Pipe.PipeType type = getType();
+            this.setImageResource(android.R.color.transparent);
+            this.setScaleX(1);
+            this.setScaleY(1);
+            this.setRotation(0);
+
+            switch (type) {
+                case TOP_LEFT:
+                    this.setImageResource(R.drawable.corner_animation);
+                    if (endDirection == Pipe.Directions.UP) {
+                        this.setRotation(180);
+                    } else {  //DIRECTION IS LEFT
+                        this.setRotation(270);
+
+                        //                            this.setScaleX(-1);
+                        this.setScaleY(-1);
+
+                        this.setImageResource(R.drawable.corner_animation);
+                    }
+                    break;
+                case TOP_RIGHT: //TODO FINISH THIS
+                    this.setImageResource(R.drawable.corner_animation);
+
+                    if (endDirection == Pipe.Directions.UP) {
+                        this.setRotation(180);
+                        this.setScaleX(-1);
+                    } else {  //DIRECTION IS RIGHT
+                        this.setRotation(90);
+                        this.setScaleX(-1);
+                        this.setScaleY(-1);
+                    }
+
+                    break;
+                case BOTTOM_LEFT:
+                    this.setImageResource(R.drawable.corner_animation);
+                    if (endDirection == Pipe.Directions.DOWN) {
+                        this.setRotation(0);
+                        this.setScaleX(-1);
+                    } else {  //DIRECTION IS LEFT
+                        this.setRotation(90);
+                    }
+                    break;
+                case BOTTOM_RIGHT:
+                    this.setImageResource(R.drawable.corner_animation);
+
+                    if (endDirection == Pipe.Directions.RIGHT) {
+                        this.setRotation(90);
+                        this.setScaleY(-1);
+                    }
+                    break;
+                case CROSS:
+                    if (numberOfVisits > 1) {
+                        this.setImageResource(R.drawable.cross_second_flow_animation);
+                        if (endDirection == Pipe.Directions.RIGHT) {
+                            this.setRotation(0);
+                        }
+                        if (endDirection == Pipe.Directions.LEFT) {
+                            this.setRotation(180);
+
+                        }
+                        if (endDirection == Pipe.Directions.UP) {
+                            this.setRotation(270);
+
+                        }
+                        if (endDirection == Pipe.Directions.DOWN) {
+                            this.setRotation(90);
+
+                        }
+
+                    }
+                    else {
+                        this.setImageResource(R.drawable.cross_first_flow_animation);
+                        if (endDirection == Pipe.Directions.RIGHT) {
+                            this.setRotation(270);
+
+                        }
+                        if (endDirection == Pipe.Directions.LEFT) {
+                            this.setRotation(90);
+
+                        }
+                        if (endDirection == Pipe.Directions.UP) {
+                            this.setRotation(180);
+                        }
+                        if (endDirection == Pipe.Directions.DOWN) {
+                            this.setRotation(0);
+
+                        }
+                    }
+
+                    break;
+                case HORIZONTAL:
+                    this.setImageResource(R.drawable.vertical_animation);
+                    this.setRotation(90);
+                    if (endDirection == Pipe.Directions.RIGHT) {
+                        this.setScaleY(-1);
+                    }
+
+                    break;
+                case VERTICAL:
+                    this.setImageResource(R.drawable.vertical_animation);
+                    if (endDirection == Pipe.Directions.UP) {
+                        this.setRotation(180);
+                    }
+                    break;
+                case START_RIGHT:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(270);
+                    break;
+                case START_LEFT:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(90);
+                    break;
+                case START_UP:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(180);
+                    break;
+                case START_DOWN:
+                    this.setImageResource(R.drawable.start_animation);
+                    break;
+            }
+
+            PipeAnimation animation = new PipeAnimation(
+                    (AnimationDrawable) this.getDrawable(),levelSpeedPerFrame) {
+                @Override
+                public void onAnimationStart() {
+
+                }
+
+                @Override
+                public void onAnimationFinish(){
+                    System.out.println("ANIM FINISHED");
+
+                    gameBoard.notifyPipeIsFull();
+                }
+            };
+            this.setImageDrawable(animation);
+            ((AnimationDrawable) this.getDrawable()).start();
+
+        }
+
+        //TODO CHECK THIS FUNCTION ON BOARD
+        public void SkipAnimation(int numberOfVisits) {
+            Pipe.PipeType type = getType();
+            this.setImageResource(android.R.color.transparent);
+            this.setScaleX(1);
+            this.setScaleY(1);
+            this.setRotation(0);
+
+            switch (type) {
+                case TOP_LEFT:
+                    this.setImageResource(R.drawable.corner_animation);
+                        this.setRotation(270);
+
+                        this.setScaleY(-1);
+
+
+                    break;
+                case TOP_RIGHT: //TODO FINISH THIS
+                    this.setImageResource(R.drawable.corner_animation);
+
+                        this.setRotation(90);
+                        this.setScaleX(-1);
+                        this.setScaleY(-1);
+
+                    break;
+                case BOTTOM_LEFT:
+                    this.setImageResource(R.drawable.corner_animation);
+                        this.setRotation(90);
+
+                    break;
+                case BOTTOM_RIGHT:
+                    this.setImageResource(R.drawable.corner_animation);
+
+                    //TODO CROSS NOT HANDLED
+                    break;
+                case CROSS:
+                    if (numberOfVisits == 1) {
+                        this.setImageResource(R.drawable.cross_first_flow_animation);
+                        Pipe currentPipe = gameBoard.getPipeByPoint(this._point);
+                        if (currentPipe != null) {
+                            if (currentPipe.getFlowDirection() == Pipe.Directions.RIGHT || currentPipe.getFlowDirection() == Pipe.Directions.LEFT) {
+                                this.setRotation(90);
+                            }
+                        }
+                    }
+                    else if (numberOfVisits == 2) {
+                        this.setImageResource(R.drawable.cross_second_flow_animation);
+
+                    }
+                    break;
+                case HORIZONTAL:
+                    this.setImageResource(R.drawable.vertical_animation);
+                    this.setRotation(90);
+
+
+                    break;
+                case VERTICAL:
+                    this.setImageResource(R.drawable.vertical_animation);
+                        this.setRotation(180);
+                    break;
+                case START_RIGHT:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(270);
+                    break;
+                case START_LEFT:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(90);
+                    break;
+                case START_UP:
+                    this.setImageResource(R.drawable.start_animation);
+                    this.setRotation(180);
+                    break;
+                case START_DOWN:
+                    this.setImageResource(R.drawable.start_animation);
+                    break;
+            }
+
+            PipeAnimation animation = new PipeAnimation(
+                    (AnimationDrawable) this.getDrawable(),levelSpeedPerFrame) {
+                @Override
+                public void onAnimationStart() {
+
+                }
+
+                @Override
+                public void onAnimationFinish(){
+                }
+            };
+            this.setImageDrawable(animation.SkipAnimation());
+        }
+
+    }
     
     @Override
     public void update(Observable observable, Object o) {
@@ -114,7 +594,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     public void onBackPressed() {
-        WelcomeDialog();
+        MainDialog();
     }
 
     @Override
@@ -160,14 +640,23 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     gameBoard.startGame();
 
                 }
+                levelSpeedPerFrame = 15;
+
             }
+
         });
 
-        CreateBoard();
+        InitializeBoard();
+//        CreatePointsBar();
+//
+//        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
+//        requierdBlocks.updateDisplay();
+
+        DisplayGame();
 
         gameTimer = new Timer("Game Timer");
 
-        WelcomeDialog();
+        MainDialog();
 
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
@@ -175,19 +664,31 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
     }
+
     public void GivePoints() {
         TextView scoreTextView = findViewById(R.id.points_text_view);
         player_score += levelPointAmount;
         scoreTextView.setText(player_score + "");
     }
 
+
     @Override
     protected void onResume() {
         super.onResume();
-//        WelcomeDialog();
+        LoadGameFromMemory();
+        DisplayGame();
+        gameBoard.startGame();
+
     }
 
-    public void CreateBoard() {
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SaveGame();
+
+    }
+
+    public void InitializeBoard() {
         LinearLayout.LayoutParams rowLinearLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         LinearLayout.LayoutParams boxContainerLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
 
@@ -201,16 +702,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setWeightSum(7);
 
-
             for (int i = 6; i > -1; i--) {
-
 
                 LinearLayout boxContainer = new LinearLayout(MainActivity.this);
                 boxContainer.setLayoutParams(boxContainerLayoutParams);
                 row.addView(boxContainer);
-
-
-
 
                 BoxButton newButton = new BoxButton(MainActivity.this);
                 newButton.setScaleX(1);
@@ -229,8 +725,30 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             mainLinearLayout.addView(row);
             mainLinearLayout.invalidate();
         }
-        requierdBlocks.setNewRequiredAmount(required_blocks_for_level);
+    }
+
+    public void DisplayGame() {
+        for (Map.Entry<Point,BoxButton> entry: layoutBoard.entrySet()) {
+            BoxButton box = entry.getValue();
+            Pipe currentPipe = gameBoard.getPipeByPoint(entry.getKey());
+            if (currentPipe == null) {
+                box.setType(null);
+                box.DrawPipe();
+            } else {
+                box.setType(currentPipe.getPipeType());
+                int numOfVisits = currentPipe.getNumOfVisits();
+                if (numOfVisits > 0) {
+                        box.SkipAnimation(numOfVisits);
+                } else {
+                    box.DrawPipe();
+                }
+            }
+        }
+        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
         requierdBlocks.updateDisplay();
+
+        CreatePointsBar();
+
 
     }
 
@@ -240,7 +758,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             box.setType(null);
             box.DrawPipe();
         }
-        requierdBlocks.setNewRequiredAmount(required_blocks_for_level);
+        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
         requierdBlocks.updateDisplay();
 
         gameBoard.resetGame();
@@ -266,6 +784,64 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         gameTimer = new Timer();
         gameTimer.schedule(timerTasks,levelStartInterval);
 
+
+
+
+
+    }
+
+    public void StartLevel(int level) {
+
+    }
+
+
+    public void StartNewGame() {
+
+    }
+
+    public void SaveGame() {
+        try {
+            FileOutputStream fos = openFileOutput("gameBoard", MODE_PRIVATE);
+            ObjectOutputStream oos = new ObjectOutputStream(fos);
+            oos.writeObject(gameBoard);
+            oos.close();
+            fos = openFileOutput("player_points", MODE_PRIVATE);
+            fos.write(player_score);
+            fos.close();
+            fos = openFileOutput("blocks_left", MODE_PRIVATE);
+            fos.write(levelRequiredBlocks);
+
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public void LoadGameFromMemory() {
+        try {
+            FileInputStream fis = openFileInput("gameBoard");
+            ObjectInputStream ois = new ObjectInputStream(fis);
+            gameBoard = (GameBoard) ois.readObject();
+            fis.close();
+
+
+            //TODO CHANGE POINT HANDLING TO GAMEBOARD POINTS
+            fis = openFileInput("player_points");
+            player_score = fis.read();
+            fis.close();
+
+            fis = openFileInput("blocks_left");
+            levelRequiredBlocks = fis.read();
+            fis.close();
+
+
+        }catch (IOException e) {
+
+        }catch (ClassNotFoundException e) {
+
+        }
     }
 
     public BoxButton getBoxFromPoint(Point point) {
@@ -283,284 +859,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         return getBoxFromPoint(pipe.getPosition());
     }
 
-    class BoxButton extends ImageButton {
-            Pipe.PipeType _type = null;
-            Point _point = null;
-    //        Dictionary<Pipe.Directions, AnimationDrawable> _animations = new Hashtable<>();
-
-
-            public BoxButton(Context context) {
-                super(context);
-                LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                imageButtonLayoutParams.weight = 1f;
-                imageButtonLayoutParams.gravity = Gravity.CENTER;
-
-                this.setFocusableInTouchMode(false);
-                this.setAdjustViewBounds(true);
-                this.setBaselineAlignBottom(false);
-                this.setCropToPadding(true);
-                this.setScaleType(ImageButton.ScaleType.FIT_XY);
-                this.setBackgroundColor(Color.TRANSPARENT);
-                this.setLayoutParams(imageButtonLayoutParams);
-                this.setPadding(0, 0, 0, 0);
-
-            }
-
-            public void DrawPipe() {
-                if (_type != null) {
-                    this.setImageResource(android.R.color.transparent);
-                    this.setScaleX(1);
-                    this.setScaleY(1);
-                    this.setRotation(0);
-
-                    switch (_type) {
-                        case TOP_LEFT:
-                            this.setImageResource(R.drawable.corner);
-                            this.setRotation(90);
-                            this.setScaleX(-1);
-                            break;
-                        case TOP_RIGHT:
-                            this.setImageResource(R.drawable.corner);
-                            this.setRotation(180);
-                            this.setScaleX(-1);
-                            break;
-                        case BOTTOM_LEFT:
-                            this.setImageResource(R.drawable.corner);
-                            this.setScaleX(-1);
-                            break;
-                        case BOTTOM_RIGHT:
-                            this.setImageResource(R.drawable.corner);
-                            break;
-                        case CROSS:
-                            this.setImageResource(R.drawable.cross);
-                            break;
-                        case HORIZONTAL:
-                            this.setImageResource(R.drawable.vertical);
-                            this.setRotation(90);
-                            break;
-                        case VERTICAL:
-                            this.setImageResource(R.drawable.vertical);
-                            break;
-                        case START_UP:
-                            this.setImageResource(R.drawable.ic_start_pipe);
-                            this.setRotation(180);
-
-                            break;
-                        case START_DOWN:
-                            this.setImageResource(R.drawable.ic_start_pipe);
-
-                            break;
-                        case START_LEFT:
-                            this.setImageResource(R.drawable.ic_start_pipe);
-                            this.setRotation(90);
-                            break;
-                        case START_RIGHT:
-                            this.setImageResource(R.drawable.ic_start_pipe);
-                            this.setRotation(270);
-                            break;
-                    }
-                } else {
-
-                    this.setImageResource(R.drawable.empty_box);
-                }
-            }
-
-            public void setPoint(Point point) {
-                this._point = point;
-            }
-
-            public Point getPoint() {
-                return this._point;
-            }
-
-            public void setType(Pipe.PipeType type) {
-                this._type = type;
-            }
-
-            public Pipe.PipeType getType() {
-                return _type;
-            }
-
-
-            public void AnimateClick() {
-                this.setImageResource(R.drawable.ic_wrench);
-
-
-                Animation a = new RotateAnimation(0.0f, 360.0f,
-                        Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
-                        0.5f);
-                a.setRepeatCount(Animation.ABSOLUTE);
-                a.setDuration(110);
-
-                this.startAnimation(a);
-                a.setAnimationListener(new Animation.AnimationListener() {
-                    @Override
-                    public void onAnimationStart(Animation animation) {
-                    }
-
-                    @Override
-                    public void onAnimationEnd(Animation animation) {
-                        DrawPipe();
-                    }
-
-                    @Override
-                    public void onAnimationRepeat(Animation animation) {
-
-                    }
-                });
-            }
-
-            public void AnimateFlow(final Pipe.Directions endDirection, int numberOfVisits) {
-                Pipe.PipeType type = getType();
-                this.setImageResource(android.R.color.transparent);
-                this.setScaleX(1);
-                this.setScaleY(1);
-                this.setRotation(0);
-
-                    switch (type) {
-                        case TOP_LEFT:
-                            this.setImageResource(R.drawable.corner_animation);
-                            if (endDirection == Pipe.Directions.UP) {
-                                this.setRotation(180);
-                            } else {  //DIRECTION IS LEFT
-                                this.setRotation(270);
-
-    //                            this.setScaleX(-1);
-                                this.setScaleY(-1);
-
-                                this.setImageResource(R.drawable.corner_animation);
-                            }
-                            break;
-                        case TOP_RIGHT: //TODO FINISH THIS
-                            this.setImageResource(R.drawable.corner_animation);
-
-                            if (endDirection == Pipe.Directions.UP) {
-                                this.setRotation(180);
-                                this.setScaleX(-1);
-                            } else {  //DIRECTION IS RIGHT
-                                this.setRotation(90);
-                                this.setScaleX(-1);
-                                this.setScaleY(-1);
-                            }
-
-                            break;
-                        case BOTTOM_LEFT:
-                            this.setImageResource(R.drawable.corner_animation);
-                            if (endDirection == Pipe.Directions.DOWN) {
-                                this.setRotation(0);
-                                this.setScaleX(-1);
-                            } else {  //DIRECTION IS LEFT
-                                this.setRotation(90);
-                            }
-                            break;
-                        case BOTTOM_RIGHT:
-                            this.setImageResource(R.drawable.corner_animation);
-
-                            if (endDirection == Pipe.Directions.RIGHT) {
-                                this.setRotation(90);
-                                this.setScaleY(-1);
-                            }
-                            break;
-                        case CROSS:
-                            if (numberOfVisits > 1) {
-                                this.setImageResource(R.drawable.cross_second_flow_animation);
-                                if (endDirection == Pipe.Directions.RIGHT) {
-                                    this.setRotation(0);
-                                }
-                                if (endDirection == Pipe.Directions.LEFT) {
-                                    this.setRotation(180);
-
-                                }
-                                if (endDirection == Pipe.Directions.UP) {
-                                    this.setRotation(270);
-
-                                }
-                                if (endDirection == Pipe.Directions.DOWN) {
-                                    this.setRotation(90);
-
-                                }
-
-                            }
-                            else {
-                                this.setImageResource(R.drawable.cross_first_flow_animation);
-                                if (endDirection == Pipe.Directions.RIGHT) {
-                                    this.setRotation(270);
-
-                                }
-                                if (endDirection == Pipe.Directions.LEFT) {
-                                    this.setRotation(90);
-
-                                }
-                                if (endDirection == Pipe.Directions.UP) {
-                                    this.setRotation(180);
-                                }
-                                if (endDirection == Pipe.Directions.DOWN) {
-                                    this.setRotation(0);
-
-                                }
-                            }
-
-                            break;
-                        case HORIZONTAL:
-                            this.setImageResource(R.drawable.vertical_animation);
-                            this.setRotation(90);
-                            if (endDirection == Pipe.Directions.RIGHT) {
-                                this.setScaleY(-1);
-                            }
-
-                            break;
-                        case VERTICAL:
-                            this.setImageResource(R.drawable.vertical_animation);
-                            if (endDirection == Pipe.Directions.UP) {
-                                this.setRotation(180);
-                            }
-                            break;
-                        case START_RIGHT:
-                            this.setImageResource(R.drawable.start_animation);
-                            this.setRotation(270);
-                            break;
-                        case START_LEFT:
-                            this.setImageResource(R.drawable.start_animation);
-                            this.setRotation(90);
-                            break;
-                        case START_UP:
-                            this.setImageResource(R.drawable.start_animation);
-                            this.setRotation(180);
-                            break;
-                        case START_DOWN:
-                            this.setImageResource(R.drawable.start_animation);
-                            break;
-                    }
-
-                    PipeAnimation cad = new PipeAnimation(
-                            (AnimationDrawable) this.getDrawable()) {
-                        @Override
-                        public void onAnimationStart() {
-                    Toast.makeText(MainActivity.this,endDirection.toString(), Toast.LENGTH_LONG).show();
-                            System.out.println("ANIM START");
-                            System.out.println(endDirection.toString());
-
-                        }
-
-                        @Override
-                        public void onAnimationFinish(){
-                            System.out.println("ANIM FINISHED");
-
-                            gameBoard.notifyPipeIsFull();
-                        }
-                    };
-                    this.setImageDrawable(cad);
-                    ((AnimationDrawable) this.getDrawable()).start();
-
-    //                Toast.makeText(MainActivity.this, "ANIM TIME: " + anim.getTotalDuration(), Toast.LENGTH_LONG).show();
-    //        }
-
-            }
-
-
-        }
-
-        public void LevelDoneDialog() {
+    public void LevelDoneDialog() {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             View levelDoneDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
             Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
@@ -573,7 +872,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             builder.show();
         }
 
-        public void WelcomeDialog() {
+    public void MainDialog() {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
             Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
@@ -596,6 +895,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             params.setMargins(0, 0, 0, 40);
 
 
+            Button continueButton = new Button(MainActivity.this);
+        continueButton.setLayoutParams(params);
+        continueButton.setText("Continue");
+        continueButton.setPadding(40,40,40,40);
+        continueButton.setTypeface(tf);
+        continueButton.setTextSize(20);
+        continueButton.setGravity(Gravity.CENTER);
+        continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        continueButton.setBackgroundResource(R.drawable.menu_button_border);
 
             Button newGameButton = new Button(MainActivity.this);
             newGameButton.setLayoutParams(params);
@@ -632,6 +940,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
             LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
             dialogMainLinearLayout.addView(newGameButton);
+            dialogMainLinearLayout.addView(continueButton);
             dialogMainLinearLayout.addView(highScoreButton);
             dialogMainLinearLayout.addView(quitButton);
 
@@ -641,18 +950,26 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             newGameButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    ResetBoard();
+                   ResetBoard ();
                     Dialog.dismiss();
                 }
             });
-            highScoreButton.setOnClickListener(new View.OnClickListener() {
-               @Override
-               public void onClick(View view) {
-                   Dialog.dismiss();
-                   Intent intent = new Intent(MainActivity.this,ActivityScores.class);
-                   startActivity(intent);
-               }
-            });
+            continueButton.setOnClickListener(new View.OnClickListener() {
+                      @Override
+                      public void onClick(View view) {
+                          onResume();
+                          Dialog.dismiss();
+                      }
+                  });
+
+                    highScoreButton.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View view) {
+                            Dialog.dismiss();
+                            Intent intent = new Intent(MainActivity.this, ActivityScores.class);
+                            startActivity(intent);
+                        }
+                    });
 
             quitButton.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -663,7 +980,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             });
         }
 
-        public void GameOverDialog(boolean isRecord) {
+    public void GameOverDialog(boolean isRecord) {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
             View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
             Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
@@ -729,7 +1046,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         }
 
-    class NextBlockBar {
+    public class NextBlockBar {
             Queue<BoxButton> nextPipeQueue = new LinkedList<>();
 
             public NextBlockBar() {
@@ -756,7 +1073,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     newBox.setType(getRandomPipeType());
                     newBox.DrawPipe();
                     newBox.setBackgroundResource(R.drawable.border_block_bar);
-                    newBox.setPadding(6,0,6,0);
+                    newBox.setPadding(8,0,8,0);
                     nextPipeQueue.add(newBox);
                 }
             }
@@ -766,7 +1083,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                 BoxButton newBox = new BoxButton(MainActivity.this);
                 newBox.setType(getRandomPipeType());
-                newBox.setPadding(6,0,6,0);
+                newBox.setPadding(8,0,8,0);
+
 
                 newBox.DrawPipe();
                 newBox.setBackgroundResource(R.drawable.border_block_bar);
@@ -784,127 +1102,24 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     View current = (View) iter.next();
                     nextBlockLayout.addView(current);
                 }
+                BoxButton nextPipe = (BoxButton) nextBlockLayout.getChildAt(0);
+                nextPipe.setBackgroundResource(R.drawable.border_block_bar_next);
 
-                //point bar starts hereeee
-                    TextView point_bar = findViewById(R.id.points_text_view);
-                Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
-                point_bar.setTypeface(tf);
-                point_bar.setTextSize(50);
-                point_bar.setGravity(Gravity.LEFT);
-                point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
             }
                 public Pipe.PipeType PeekNextType() {
                 return nextPipeQueue.peek().getType();
             }
         }
 
-
-    public abstract class PipeAnimation extends AnimationDrawable {
-
-     /**
-      * Handles the animation callback.
-      */
-     Handler mAnimationHandler;
-
-     public PipeAnimation(AnimationDrawable aniDrawable) {
-         /* Add each frame to our animation drawable */
-//         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
-//             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
-//         }
-         int i = 0;
-         for (; i < 18; i++) {
-                 this.addFrame(aniDrawable.getFrame(i), 0);
-
-         }
-
-         //time manipulation
-         for (; i < aniDrawable.getNumberOfFrames(); i++) {
-
-                 this.addFrame(aniDrawable.getFrame(i), 25);
-
-         }
-         this.setOneShot(true);
-
-     }
-
-     @Override
-     public void start() {
-         super.start();
-
-         mAnimationHandler = new Handler();
-         mAnimationHandler.post(new Runnable() {
-             @Override
-             public void run() {
-                 onAnimationStart();
-             }
-         });
-         mAnimationHandler.postDelayed(new Runnable() {
-             @Override
-             public void run() {
-                 onAnimationFinish();
-             }
-         }, getTotalDuration());
-
-     }
-
-     /**
-      * Gets the total duration of all frames.
-      *
-      * @return The total duration.
-      */
-     public int getTotalDuration() {
-
-         int iDuration = 0;
-
-         for (int i = 0; i < this.getNumberOfFrames(); i++) {
-             iDuration += this.getDuration(i);
-         }
-
-         return iDuration;
-     }
-
-     public abstract void onAnimationFinish();
-
-     public abstract void onAnimationStart();
-
- }
-
- class RequierdBoxesBar {
-        int requiredPipes = 0;
-
-        public void RequierdBoxes() {
-
+    public void CreatePointsBar() {
+            //point bar starts hereeee
+            TextView point_bar = findViewById(R.id.points_text_view);
+            Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+            point_bar.setTypeface(tf);
+            point_bar.setTextSize(50);
+            point_bar.setGravity(Gravity.LEFT);
+            point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+            point_bar.setText(player_score+"");
         }
 
-        public void setNewRequiredAmount (int newAmount) {
-            requiredPipes = newAmount;
-            updateDisplay();
-        }
-
-        private void updateDisplay() {
-            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-
-            LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(60, 60);
-            imageButtonLayoutParams.weight = 1f;
-            imageButtonLayoutParams.gravity = Gravity.CENTER;
-
-            requierdBlocksLayout.removeAllViews();
-
-            for (int i=0; i < requiredPipes; i++) {
-                BoxButton requierdBlock = new BoxButton(MainActivity.this);
-                requierdBlock.setLayoutParams(imageButtonLayoutParams);
-                requierdBlock.setAdjustViewBounds(false);
-                requierdBlock.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                requierdBlock.setType(Pipe.PipeType.HORIZONTAL);
-                requierdBlock.setPadding(3,3,3,3);
-                requierdBlock.DrawPipe();
-                requierdBlocksLayout.addView(requierdBlock);
-            }
-        }
-
-        public void DecrementAmount() {
-            requiredPipes--;
-            updateDisplay();
-        }
-    }
 }

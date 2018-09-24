@@ -1,10 +1,11 @@
 package com.hit.project.pipedream.logic;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Observable;
 
-public class Pipe extends Observable{
+public class Pipe extends Observable implements Serializable{
 
     public enum PipeType {TOP_LEFT("Top Left Pipe"),TOP_RIGHT("Top Right Pipe"),
         BOTTOM_LEFT("Bottom Left Pipe"),BOTTOM_RIGHT("Bottom Right Pipe"),

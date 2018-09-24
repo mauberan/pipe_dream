@@ -1,15 +1,23 @@
 package com.hit.project.pipedream;
 
 import android.app.Activity;
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import java.util.Random;
 
 public class ActivityScores extends Activity {
     @Override
@@ -46,6 +54,9 @@ public class ActivityScores extends Activity {
         mainScoresLinearLayout.addView(backButton);
 
 
-    }
 
+
+
+
+    }
 }
