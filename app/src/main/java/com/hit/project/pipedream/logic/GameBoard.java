@@ -261,4 +261,8 @@ public class GameBoard extends Observable implements Observer,Serializable {
     public Pipe getPipeByPoint(Point point) {
         return _board[point.getX()][point.getY()];
     }
+
+    public int getLevelNumber() {
+        return _level;
+    }
 }

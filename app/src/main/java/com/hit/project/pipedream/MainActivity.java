@@ -70,16 +70,11 @@ import java.util.TimerTask;
 
 import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PIPE;
 
-public class MainActivity extends Activity implements View.OnClickListener , Observer{
-    GameBoard gameBoard = new GameBoard(7);
-    Map<Point,BoxButton> layoutBoard = new HashMap<>();
+public class MainActivity extends Activity implements View.OnClickListener , Observer {
+    GameBoard gameBoard;
+    Map<Point, BoxButton> layoutBoard = new HashMap<>();
 
-//    int player_score = 0;
-//    int levelRequiredBlocks = 20;
-//    int levelPointAmount = 100;
-//    int levelStartInterval = 8*1000;
-//    int levelSpeedPerFrame = 50;
-//    int currentLevel = 1;
+    int levelSpeedPerFrame = 50;
     boolean isRunning = false;
 
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
@@ -90,7 +85,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         Handler mAnimationHandler;
 
-        public PipeAnimation(AnimationDrawable aniDrawable,int levelFlowTimePerFrame) {
+        public PipeAnimation(AnimationDrawable aniDrawable, int levelFlowTimePerFrame) {
             /* Add each frame to our animation drawable */
 //         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
 //             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
@@ -147,7 +142,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         public abstract void onAnimationStart();
 
         public Drawable SkipAnimation() {
-            return this.getFrame(getNumberOfFrames()-1);
+            return this.getFrame(getNumberOfFrames() - 1);
         }
 
 
@@ -160,7 +155,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         }
 
-        public void setNewRequiredAmount (int newAmount) {
+        public void setNewRequiredAmount(int newAmount) {
             requiredPipes = newAmount;
             updateDisplay();
         }
@@ -175,11 +170,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
             requierdBlocksLayout.removeAllViews();
 
-            for (int i=0; i < requiredPipes; i++) {
+            for (int i = 0; i < requiredPipes; i++) {
                 ImageView thumb = new ImageView(MainActivity.this);
                 thumb.setLayoutParams(imageButtonLayoutParams);
                 thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb);
-                thumb.setPadding(4,0,4,0);
+                thumb.setPadding(4, 0, 4, 0);
                 thumb.setForegroundGravity(Gravity.LEFT);
                 requierdBlocksLayout.addView(thumb);
 
@@ -391,8 +386,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                         }
 
-                    }
-                    else {
+                    } else {
                         this.setImageResource(R.drawable.cross_first_flow_animation);
                         if (endDirection == Pipe.Directions.RIGHT) {
                             this.setRotation(270);
@@ -444,10 +438,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
 
             PipeAnimation animation = new PipeAnimation(
-                    (AnimationDrawable) this.getDrawable(),gameBoard.getCurrentLevel().getFlowTimeInPipe()) {
+                    (AnimationDrawable) this.getDrawable(), levelSpeedPerFrame) {
                 @Override
                 public void onAnimationStart() {
-                System.out.println("ANIM STARTED");
+                    System.out.println("ANIM STARTED");
                 }
 
                 @Override
@@ -474,23 +468,23 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             switch (type) {
                 case TOP_LEFT:
                     this.setImageResource(R.drawable.corner_animation);
-                        this.setRotation(270);
+                    this.setRotation(270);
 
-                        this.setScaleY(-1);
+                    this.setScaleY(-1);
 
 
                     break;
                 case TOP_RIGHT: //TODO FINISH THIS
                     this.setImageResource(R.drawable.corner_animation);
 
-                        this.setRotation(90);
-                        this.setScaleX(-1);
-                        this.setScaleY(-1);
+                    this.setRotation(90);
+                    this.setScaleX(-1);
+                    this.setScaleY(-1);
 
                     break;
                 case BOTTOM_LEFT:
                     this.setImageResource(R.drawable.corner_animation);
-                        this.setRotation(90);
+                    this.setRotation(90);
 
                     break;
                 case BOTTOM_RIGHT:
@@ -507,8 +501,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                                 this.setRotation(90);
                             }
                         }
-                    }
-                    else if (numberOfVisits == 2) {
+                    } else if (numberOfVisits == 2) {
                         this.setImageResource(R.drawable.cross_second_flow_animation);
 
                     }
@@ -521,7 +514,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     break;
                 case VERTICAL:
                     this.setImageResource(R.drawable.vertical_animation);
-                        this.setRotation(180);
+                    this.setRotation(180);
                     break;
                 case START_RIGHT:
                     this.setImageResource(R.drawable.start_animation);
@@ -541,14 +534,14 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
 
             PipeAnimation animation = new PipeAnimation(
-                    (AnimationDrawable) this.getDrawable(),gameBoard.getCurrentLevel().getFlowTimeInPipe()) {
+                    (AnimationDrawable) this.getDrawable(), gameBoard.getCurrentLevel().getFlowTimeInPipe()) {
                 @Override
                 public void onAnimationStart() {
 
                 }
 
                 @Override
-                public void onAnimationFinish(){
+                public void onAnimationFinish() {
                 }
             };
             this.setImageDrawable(animation.SkipAnimation());
@@ -556,46 +549,50 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
     }
-    
+
     @Override
     public void update(Observable observable, Object o) {
         if (!(observable instanceof GameBoard)) {
             return;
         }
 
-        Pipe.FlowStatus currentPipeFlowStatus =  (Pipe.FlowStatus)o;
+        Pipe.FlowStatus currentPipeFlowStatus = (Pipe.FlowStatus) o;
 
-       switch (currentPipeFlowStatus) {
-           case FLOW_STARTED_IN_PIPE:
-               MainActivity.this.runOnUiThread(new Runnable() {
-                   @Override
-                   public void run() {
-                       Pipe currentPipe = gameBoard.getCurrentPipe();
-                       BoxButton box = getBoxFromPipe(currentPipe);
+        switch (currentPipeFlowStatus) {
+            case FLOW_STARTED_IN_PIPE:
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Pipe currentPipe = gameBoard.getCurrentPipe();
+                        BoxButton box = getBoxFromPipe(currentPipe);
 
-                       box.AnimateFlow(currentPipe.getFlowDirection(),currentPipe.getNumOfVisits());
-                   }
-               });
-                System.out.println(String.format("pipe location:%s flow direction:%s",gameBoard.getCurrentPipe().getPosition(),gameBoard.getCurrentPipe().getFlowDirection()));
+                        box.AnimateFlow(currentPipe.getFlowDirection(), currentPipe.getNumOfVisits());
+                    }
+                });
+                System.out.println(String.format("pipe location:%s flow direction:%s", gameBoard.getCurrentPipe().getPosition(), gameBoard.getCurrentPipe().getFlowDirection()));
 //               currentPipe.g
-               UpdatePointBar();
-               requierdBlocks.DecrementAmount();
+                UpdatePointBar();
+                requierdBlocks.DecrementAmount();
 
-
-               break;
-           case FOUND_NEXT_PIPE:
+                break;
+            case FOUND_NEXT_PIPE:
 //                 Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
-                //TODO: CREATE SCORE VIEW AND UPDATE IT HERE
-               break;
-           case GAMEOVER:
-               this.GameOverDialog(false);
-               try {
-                   Thread.sleep(500);
-               } catch (InterruptedException e) {
-                   e.printStackTrace();
-               }
-               break;
-       }
+                break;
+            case GAMEOVER:
+                this.GameOverDialog(false);
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                break;
+
+            case NEXT_LEVEL:
+                LevelDoneDialog();
+
+            case NO_MORE_LEVELS:
+
+        }
     }
 
     NextBlockBar nextBar = new NextBlockBar();
@@ -617,7 +614,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         Pipe.PipeType nextType = nextBar.PeekNextType();
 
-        boolean result = gameBoard.addPipeToBoard(box.getPoint(),nextType);
+        boolean result = gameBoard.addPipeToBoard(box.getPoint(), nextType);
 
         if (result) {
             box.setType(nextBar.OnClickAction());
@@ -631,7 +628,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         setContentView(R.layout.activity_main);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Window w = getWindow(); w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
+            Window w = getWindow();
+            w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
         }
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
 
@@ -644,11 +642,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             public void onClick(View view) {
                 if (gameTimer != null) {
                     gameTimer.cancel();
-                    gameTimer= null;
+                    gameTimer = null;
                     gameBoard.startGame();
 
                 }
-//                levelSpeedPerFrame = 15;
+                levelSpeedPerFrame = 10;
 
             }
 
@@ -660,15 +658,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 //        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
 //        requierdBlocks.updateDisplay();
 
-        DisplayGame();
 
-        gameTimer = new Timer("Game Timer");
 
         MainDialog();
 
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
-
 
 
     }
@@ -682,18 +677,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     @Override
     protected void onStart() {
         super.onStart();
-        MainDialog();
 
         DisplayGame();
         gameBoard.addObserver(this);
         isRunning = true;
-        if (gameBoard.getIsInGame())
-        {
+        if (gameBoard.getIsInGame()) {
             Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
             BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
-            currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(),currentFlowingPipe.getNumOfVisits());
+            currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(), currentFlowingPipe.getNumOfVisits());
         }
-//        gameBoard.startGame();
 
 
     }
@@ -732,7 +724,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                 newButton.setPoint(new Point(i, j));
                 newButton.setOnClickListener(MainActivity.this);
-                layoutBoard.put(newButton.getPoint(),newButton);
+                layoutBoard.put(newButton.getPoint(), newButton);
 
 
                 newButton.DrawPipe();
@@ -745,7 +737,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void DisplayGame() {
-        for (Map.Entry<Point,BoxButton> entry: layoutBoard.entrySet()) {
+        SetLevelBackground(gameBoard.getLevelNumber());
+
+        for (Map.Entry<Point, BoxButton> entry : layoutBoard.entrySet()) {
             BoxButton box = entry.getValue();
             Pipe currentPipe = gameBoard.getPipeByPoint(entry.getKey());
             if (currentPipe == null) {
@@ -755,12 +749,13 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 box.setType(currentPipe.getPipeType());
                 int numOfVisits = currentPipe.getNumOfVisits();
                 if (numOfVisits > 0) {
-                        box.SkipAnimation(numOfVisits);
+                    box.SkipAnimation(numOfVisits);
                 } else {
                     box.DrawPipe();
                 }
             }
         }
+
         requierdBlocks.setNewRequiredAmount(gameBoard.getLeftPipesToComplete());
         requierdBlocks.updateDisplay();
 
@@ -773,6 +768,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
         requierdBlocks.updateDisplay();
+        levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
 
         gameBoard.resetGame();
         DisplayGame();
@@ -791,24 +787,28 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
             }
         };
+
         gameTimer = new Timer();
-        gameTimer.schedule(timerTasks,gameBoard.getCurrentLevel().getTimeBeforeFlow() * 1000);
+        gameTimer.schedule(timerTasks, gameBoard.getCurrentLevel().getTimeBeforeFlow() * 1000);
+    }
 
+    public boolean IsSavedGameExists() {
+        File file = getBaseContext().getFileStreamPath("GameBoard");
+        Toast.makeText(this, file.exists() + "",
+                Toast.LENGTH_LONG).show();
+        return file.exists();
+    }
 
-
-
+    public void ResumeSavedGame() {
 
     }
 
     public void PauseGame() {
-
-
         if (gameBoard.getIsInGame()) {
-
             System.out.println("GAME PAUSED");
             Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
             BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
-            AnimationDrawable animation = (AnimationDrawable)currentFlowingBox.getDrawable();
+            AnimationDrawable animation = (AnimationDrawable) currentFlowingBox.getDrawable();
             isRunning = false;
             animation.stop();
         }
@@ -817,11 +817,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
     }
-
-
-
-
-
 
     public void SaveGame() {
         try {
@@ -843,18 +838,27 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         }
     }
 
+    public void EmptyMemory() {
+        File file = new File("gameBoard");
+        if (file.exists()) {
+            file.delete();
+        }
+        file = new File("isRunning");
+        if (file.exists()) {
+            file.delete();
+        }
+    }
+
     public boolean LoadGameFromMemory() {
         try {
-            File file = new File("gameBoard");
-            if (file.exists()) {
+            if (IsSavedGameExists()) {
                 FileInputStream fis = openFileInput("gameBoard");
                 ObjectInputStream ois = new ObjectInputStream(fis);
                 gameBoard = (GameBoard) ois.readObject();
 
                 fis.close();
 
-                file.delete();
-            }else {
+            } else {
                 gameBoard = new GameBoard(7);
                 return false;
             }
@@ -863,16 +867,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             DataInputStream dis = new DataInputStream(fis);
             isRunning = dis.readBoolean();
             dis.close();
-            file = new File("isRunning");
-            file.delete();
 
+            EmptyMemory();
 
-        }catch (IOException e) {
+        } catch (IOException e) {
 
-        }catch (ClassNotFoundException e) {
+        } catch (ClassNotFoundException e) {
 
         }
-       return true;
+        return true;
     }
 
     public BoxButton getBoxFromPoint(Point point) {
@@ -891,130 +894,162 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void LevelDoneDialog() {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            View levelDoneDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
-            Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View levelDoneDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
+        Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+
+        TextView levelDoneTextView = levelDoneDialog.findViewById(R.id.dialog_title_text_view);
+        levelDoneTextView.setText("Level " + gameBoard.getLevelNumber() + " Done");
+        levelDoneTextView.setGravity(Gravity.CENTER);
+        levelDoneTextView.setTextSize(50);
+        levelDoneTextView.setPadding(0,0,0,40);
 
 
-            TextView levelDoneTextView = levelDoneDialog.findViewById(R.id.dialog_title_text_view);
-            levelDoneTextView.setText("Level X Done");
-            levelDoneTextView.setTypeface(tf);
-            builder.setView(levelDoneDialog);
-            builder.show();
-        }
+        levelDoneTextView.setTypeface(tf);
+        LinearLayout dialogLinearLayout = levelDoneDialog.findViewById(R.id.dialog_main);
 
-    public void MainDialog() {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
-            Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
-            builder.setCancelable(false);
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, 40);
 
-
-            TextView levelDoneTextView = gameOverDialog.findViewById(R.id.dialog_title_text_view);
-            levelDoneTextView.setText("Pipe Dream");
-            levelDoneTextView.setGravity(Gravity.CENTER);
-            levelDoneTextView.setTextSize(40);
-
-            levelDoneTextView.setPadding(10,10,10,20);
-            levelDoneTextView.setTypeface(tf);
+        Button nextLevelButton = new Button(MainActivity.this);
+        nextLevelButton.setLayoutParams(params);
+        nextLevelButton.setText("Next Level");
+        nextLevelButton.setPadding(40, 40, 40, 40);
+        nextLevelButton.setTypeface(tf);
+        nextLevelButton.setTextSize(20);
+        nextLevelButton.setGravity(Gravity.CENTER);
+        nextLevelButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        nextLevelButton.setBackgroundResource(R.drawable.menu_button_border);
+        dialogLinearLayout.addView(nextLevelButton);
 
 
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            params.setMargins(0, 0, 0, 40);
+        builder.setView(levelDoneDialog);
+        final AlertDialog Dialog = builder.show();
 
-        LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
-
-
-                Button continueButton = new Button(MainActivity.this);
-                continueButton.setLayoutParams(params);
-                continueButton.setText("Continue");
-                continueButton.setPadding(40, 40, 40, 40);
-                continueButton.setTypeface(tf);
-                continueButton.setTextSize(20);
-                continueButton.setGravity(Gravity.CENTER);
-                continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-                continueButton.setBackgroundResource(R.drawable.menu_button_border);
-                dialogMainLinearLayout.addView(continueButton);
-
-
-
-            Button newGameButton = new Button(MainActivity.this);
-            newGameButton.setLayoutParams(params);
-            newGameButton.setText("New Game");
-            newGameButton.setPadding(40,40,40,40);
-            newGameButton.setTypeface(tf);
-            newGameButton.setTextSize(20);
-            newGameButton.setGravity(Gravity.CENTER);
-            newGameButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            newGameButton.setBackgroundResource(R.drawable.menu_button_border);
-
-
-
-            Button highScoreButton = new Button(MainActivity.this);
-            highScoreButton.setLayoutParams(params);
-            highScoreButton.setText("High Scores");
-            highScoreButton.setPadding(40,40,40,40);
-            highScoreButton.setTypeface(tf);
-            highScoreButton.setTextSize(20);
-            highScoreButton.setGravity(Gravity.CENTER);
-            highScoreButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            highScoreButton.setBackgroundResource(R.drawable.menu_button_border);
-
-
-            Button quitButton = new Button(MainActivity.this);
-            quitButton.setLayoutParams(params);
-            quitButton.setText("Quit Game");
-            quitButton.setPadding(40,40,40,40);
-            quitButton.setTypeface(tf);
-            quitButton.setTextSize(20);
-            quitButton.setGravity(Gravity.CENTER);
-            quitButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            quitButton.setBackgroundResource(R.drawable.menu_button_border);
-
-
-            if (LoadGameFromMemory()) {
-
-                dialogMainLinearLayout.addView(continueButton);
+        nextLevelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                gameBoard.resetGame();
+                levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
+                DisplayGame();
+                Dialog.dismiss();
 
             }
-            dialogMainLinearLayout.addView(newGameButton);
-            dialogMainLinearLayout.addView(highScoreButton);
-            dialogMainLinearLayout.addView(quitButton);
+        });
+
+    }
+
+    public void MainDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View mainDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
+        Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+        builder.setCancelable(false);
 
 
-            builder.setView(gameOverDialog);
-            final AlertDialog Dialog = builder.show();
+        TextView levelDoneTextView = mainDialog.findViewById(R.id.dialog_title_text_view);
+        levelDoneTextView.setText("Pipe Dream");
+        levelDoneTextView.setGravity(Gravity.CENTER);
+        levelDoneTextView.setTextSize(40);
+
+        levelDoneTextView.setPadding(10, 10, 10, 20);
+        levelDoneTextView.setTypeface(tf);
 
 
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
+        params.setMargins(0, 0, 0, 40);
 
-            newGameButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                   StartNewGame ();
-                    Dialog.dismiss();
-                }
-            });
+        LinearLayout dialogMainLinearLayout = mainDialog.findViewById(R.id.dialog_main);
 
 
-                    highScoreButton.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View view) {
-                            Dialog.dismiss();
-                            Intent intent = new Intent(MainActivity.this, ActivityScores.class);
-                            startActivity(intent);
-                        }
-                    });
+        Button continueButton = new Button(MainActivity.this);
+        continueButton.setLayoutParams(params);
+        continueButton.setText("Continue");
+        continueButton.setPadding(40, 40, 40, 40);
+        continueButton.setTypeface(tf);
+        continueButton.setTextSize(20);
+        continueButton.setGravity(Gravity.CENTER);
+        continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        continueButton.setBackgroundResource(R.drawable.menu_button_border);
 
-            quitButton.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Dialog.dismiss();
-                        finish();
-                    }
-            });
+
+        Button newGameButton = new Button(MainActivity.this);
+        newGameButton.setLayoutParams(params);
+        newGameButton.setText("New Game");
+        newGameButton.setPadding(40, 40, 40, 40);
+        newGameButton.setTypeface(tf);
+        newGameButton.setTextSize(20);
+        newGameButton.setGravity(Gravity.CENTER);
+        newGameButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        newGameButton.setBackgroundResource(R.drawable.menu_button_border);
+
+
+        Button highScoreButton = new Button(MainActivity.this);
+        highScoreButton.setLayoutParams(params);
+        highScoreButton.setText("High Scores");
+        highScoreButton.setPadding(40, 40, 40, 40);
+        highScoreButton.setTypeface(tf);
+        highScoreButton.setTextSize(20);
+        highScoreButton.setGravity(Gravity.CENTER);
+        highScoreButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        highScoreButton.setBackgroundResource(R.drawable.menu_button_border);
+
+
+        Button quitButton = new Button(MainActivity.this);
+        quitButton.setLayoutParams(params);
+        quitButton.setText("Quit Game");
+        quitButton.setPadding(40, 40, 40, 40);
+        quitButton.setTypeface(tf);
+        quitButton.setTextSize(20);
+        quitButton.setGravity(Gravity.CENTER);
+        quitButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        quitButton.setBackgroundResource(R.drawable.menu_button_border);
+
+
+        if (LoadGameFromMemory()) {
+
+            dialogMainLinearLayout.addView(continueButton);
+
+        }
+        dialogMainLinearLayout.addView(newGameButton);
+        dialogMainLinearLayout.addView(highScoreButton);
+        dialogMainLinearLayout.addView(quitButton);
+
+
+        builder.setView(mainDialog);
+        final AlertDialog Dialog = builder.show();
+
+
+        newGameButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                StartNewGame();
+                Dialog.dismiss();
+            }
+        });
+
+
+        highScoreButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Dialog.dismiss();
+                Intent intent = new Intent(MainActivity.this, ActivityScores.class);
+                startActivity(intent);
+            }
+        });
+
+        quitButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Dialog.dismiss();
+                finish();
+            }
+        });
 
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1023,148 +1058,198 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 Dialog.dismiss();
             }
         });
-        }
+    }
 
     public void GameOverDialog(boolean isRecord) {
-            AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
-            View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog,null);
-            Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
+        Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
 
-            if (isRecord == true) {
-                //TODO: FINISH THIS SHIT
-            }
-
-            TextView levelDoneTextView = gameOverDialog.findViewById(R.id.dialog_title_text_view);
-            levelDoneTextView.setText("Game Over");
-            levelDoneTextView.setGravity(Gravity.CENTER);
-            levelDoneTextView.setTextSize(60);
-
-            levelDoneTextView.setPadding(10,10,10,20);
-            levelDoneTextView.setTypeface(tf);
-
-            ImageView dialogIcon = new ImageView(MainActivity.this,null,LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-            dialogIcon.setImageResource(R.drawable.ic_game_over);
-            dialogIcon.setScaleType(ImageView.ScaleType.FIT_XY);
-
-
-            TextView points_text_view = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                points_text_view = new TextView(MainActivity.this, null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-            }
-
-            LinearLayout pointsAndIconLine = new LinearLayout(MainActivity.this,null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
-            pointsAndIconLine.setOrientation(LinearLayout.HORIZONTAL);
-
-            points_text_view.setText("Your score: " + gameBoard.getScore());
-            points_text_view.setGravity(Gravity.LEFT);
-            points_text_view.setPadding(10,10,10,20);
-            points_text_view.setTextSize(20);
-            points_text_view.setTypeface(tf);
-
-            Button tryAgianButton = new Button(MainActivity.this,null,LinearLayout.LayoutParams.WRAP_CONTENT,LinearLayout.LayoutParams.WRAP_CONTENT);
-            tryAgianButton.setText("Try Again");
-            tryAgianButton.setPadding(40,40,40,40);
-            tryAgianButton.setTypeface(tf);
-            tryAgianButton.setTextSize(30);
-            tryAgianButton.setGravity(Gravity.CENTER);
-            tryAgianButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
-            tryAgianButton.setBackgroundResource(R.drawable.menu_button_border);
-
-
-
-
-            LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
-            pointsAndIconLine.addView(dialogIcon);
-            pointsAndIconLine.addView(points_text_view);
-            dialogMainLinearLayout.addView(pointsAndIconLine);
-            dialogMainLinearLayout.addView(tryAgianButton);
-
-            builder.setView(gameOverDialog);
-            final AlertDialog Dialog = builder.show();
-            tryAgianButton.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    StartNewGame();
-                    Dialog.dismiss();
-                }
-            });
-
+        if (isRecord == true) {
+            //TODO: FINISH THIS SHIT
         }
 
+        TextView levelDoneTextView = gameOverDialog.findViewById(R.id.dialog_title_text_view);
+        levelDoneTextView.setText("Game Over");
+        levelDoneTextView.setGravity(Gravity.CENTER);
+        levelDoneTextView.setTextSize(60);
+
+        levelDoneTextView.setPadding(10, 10, 10, 20);
+        levelDoneTextView.setTypeface(tf);
+
+        ImageView dialogIcon = new ImageView(MainActivity.this, null, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        dialogIcon.setImageResource(R.drawable.ic_game_over);
+        dialogIcon.setScaleType(ImageView.ScaleType.FIT_XY);
+
+
+        TextView points_text_view = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+            points_text_view = new TextView(MainActivity.this, null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        }
+
+        LinearLayout pointsAndIconLine = new LinearLayout(MainActivity.this, null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
+        pointsAndIconLine.setOrientation(LinearLayout.HORIZONTAL);
+
+        points_text_view.setText("Your score: " + gameBoard.getScore());
+        points_text_view.setGravity(Gravity.LEFT);
+        points_text_view.setPadding(10, 10, 10, 20);
+        points_text_view.setTextSize(20);
+        points_text_view.setTypeface(tf);
+
+        Button tryAgianButton = new Button(MainActivity.this, null, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        tryAgianButton.setText("I'm a loser");
+        tryAgianButton.setPadding(40, 40, 40, 40);
+        tryAgianButton.setTypeface(tf);
+        tryAgianButton.setTextSize(30);
+        tryAgianButton.setGravity(Gravity.CENTER);
+        tryAgianButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+        tryAgianButton.setBackgroundResource(R.drawable.menu_button_border);
+
+
+        LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
+        pointsAndIconLine.addView(dialogIcon);
+        pointsAndIconLine.addView(points_text_view);
+        dialogMainLinearLayout.addView(pointsAndIconLine);
+        dialogMainLinearLayout.addView(tryAgianButton);
+
+        builder.setView(gameOverDialog);
+        final AlertDialog Dialog = builder.show();
+        tryAgianButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EmptyMemory();
+                Dialog.dismiss();
+                MainDialog();
+            }
+        });
+
+    }
+
     public class NextBlockBar {
-            Queue<BoxButton> nextPipeQueue = new LinkedList<>();
+        Queue<BoxButton> nextPipeQueue = new LinkedList<>();
 
-            public NextBlockBar() {
-            }
+        public NextBlockBar() {
+        }
 
-            public Pipe.PipeType getRandomPipeType() {
-                List<Pipe.PipeType> all_boxes = new ArrayList<>();
+        public Pipe.PipeType getRandomPipeType() {
+            List<Pipe.PipeType> all_boxes = new ArrayList<>();
 
-                all_boxes.add(Pipe.PipeType.TOP_LEFT);
-                all_boxes.add(Pipe.PipeType.TOP_RIGHT);
-                all_boxes.add(Pipe.PipeType.BOTTOM_LEFT);
-                all_boxes.add(Pipe.PipeType.BOTTOM_RIGHT);
-                all_boxes.add(Pipe.PipeType.CROSS);
-                all_boxes.add(Pipe.PipeType.VERTICAL);
-                all_boxes.add(Pipe.PipeType.HORIZONTAL);
-                int rand = (int) (Math.random() * (7));
-                return all_boxes.get(rand);
-            }
+            all_boxes.add(Pipe.PipeType.TOP_LEFT);
+            all_boxes.add(Pipe.PipeType.TOP_RIGHT);
+            all_boxes.add(Pipe.PipeType.BOTTOM_LEFT);
+            all_boxes.add(Pipe.PipeType.BOTTOM_RIGHT);
+            all_boxes.add(Pipe.PipeType.CROSS);
+            all_boxes.add(Pipe.PipeType.VERTICAL);
+            all_boxes.add(Pipe.PipeType.HORIZONTAL);
+            int rand = (int) (Math.random() * (7));
+            return all_boxes.get(rand);
+        }
 
-            public void InitializeBlockBar() {
-                for (int i = 0; i < 5; i++) {
-
-                    BoxButton newBox = new BoxButton(MainActivity.this);
-                    newBox.setType(getRandomPipeType());
-                    newBox.DrawPipe();
-                    newBox.setBackgroundResource(R.drawable.border_block_bar);
-                    newBox.setPadding(8,0,8,0);
-                    nextPipeQueue.add(newBox);
-                }
-            }
-
-            public Pipe.PipeType OnClickAction() {
-                BoxButton selected = nextPipeQueue.remove();
+        public void InitializeBlockBar() {
+            for (int i = 0; i < 5; i++) {
 
                 BoxButton newBox = new BoxButton(MainActivity.this);
                 newBox.setType(getRandomPipeType());
-                newBox.setPadding(8,0,8,0);
-
-
                 newBox.DrawPipe();
                 newBox.setBackgroundResource(R.drawable.border_block_bar);
+                newBox.setPadding(8, 0, 8, 0);
                 nextPipeQueue.add(newBox);
-
-                DrawBar();
-                return selected.getType();
-            }
-
-            public void DrawBar() {
-                LinearLayout nextBlockLayout = findViewById(R.id.next_block_bar);
-                nextBlockLayout.removeAllViews();
-                Iterator iter = nextPipeQueue.iterator();
-                while (iter.hasNext()) {
-                    View current = (View) iter.next();
-                    nextBlockLayout.addView(current);
-                }
-                BoxButton nextPipe = (BoxButton) nextBlockLayout.getChildAt(0);
-                nextPipe.setBackgroundResource(R.drawable.border_block_bar_next);
-
-            }
-                public Pipe.PipeType PeekNextType() {
-                return nextPipeQueue.peek().getType();
             }
         }
+
+        public Pipe.PipeType OnClickAction() {
+            BoxButton selected = nextPipeQueue.remove();
+
+            BoxButton newBox = new BoxButton(MainActivity.this);
+            newBox.setType(getRandomPipeType());
+            newBox.setPadding(8, 0, 8, 0);
+
+
+            newBox.DrawPipe();
+            newBox.setBackgroundResource(R.drawable.border_block_bar);
+            nextPipeQueue.add(newBox);
+
+            DrawBar();
+            return selected.getType();
+        }
+
+        public void DrawBar() {
+            LinearLayout nextBlockLayout = findViewById(R.id.next_block_bar);
+            nextBlockLayout.removeAllViews();
+            Iterator iter = nextPipeQueue.iterator();
+            while (iter.hasNext()) {
+                View current = (View) iter.next();
+                nextBlockLayout.addView(current);
+            }
+            BoxButton nextPipe = (BoxButton) nextBlockLayout.getChildAt(0);
+            nextPipe.setBackgroundResource(R.drawable.border_block_bar_next);
+
+        }
+
+        public Pipe.PipeType PeekNextType() {
+            return nextPipeQueue.peek().getType();
+        }
+    }
 
     public void CreatePointsBar() {
-            //point bar starts hereeee
-            TextView point_bar = findViewById(R.id.points_text_view);
-            Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
-            point_bar.setTypeface(tf);
-            point_bar.setTextSize(50);
-            point_bar.setGravity(Gravity.LEFT);
-            point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-            point_bar.setText(gameBoard.getScore()+"");
+        //point bar starts hereeee
+        TextView point_bar = findViewById(R.id.points_text_view);
+        Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
+        point_bar.setTypeface(tf);
+        point_bar.setTextSize(50);
+        point_bar.setGravity(Gravity.LEFT);
+        point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+        point_bar.setText(gameBoard.getScore() + "");
+    }
+
+    public void SetLevelBackground(int levelNumber) {
+        LinearLayout backgroundLayout = findViewById(R.id.background_layout);
+        switch (levelNumber) {
+            case 1:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_1);
+                break;
+            case 2:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_2);
+
+                break;
+            case 3:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_3);
+
+                break;
+            case 4:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_4);
+
+                break;
+            case 5:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_5);
+
+                break;
+            case 6:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_6);
+
+                break;
+            case 7:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_7);
+
+                break;
+            case 8:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_8);
+
+                break;
+            case 9:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_9);
+
+                break;
+            case 10:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_20);
+
+                break;
+            default:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_4);
+
+
         }
 
+
+    }
 }
