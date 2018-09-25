@@ -188,8 +188,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         public void DecrementAmount() {
             requiredPipes--;
-            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-            requierdBlocksLayout.removeViewAt(0);
+            if (requiredPipes >= 0) {
+                LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+                requierdBlocksLayout.removeViewAt(0);
+            }
         }
     }
 
