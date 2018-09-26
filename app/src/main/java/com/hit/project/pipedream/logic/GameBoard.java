@@ -14,6 +14,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
     private int _level;
     private boolean _isInGame;
     private int _passedGraceTime;
+    private int _totalScore;
 
     public GameBoard(int rowColumnSize)
     {
@@ -167,30 +168,51 @@ public class GameBoard extends Observable implements Observer,Serializable {
         newPipe.addNeighborPipe(neighborToUpdate,relativeDirection.getOppositeDirection());
     }
 
-    public void resetGame()
+    private void clearBoardInfo()
     {
-        if (shouldLoadNextLevel())
-        {
-            _level += 1;
-            if (_level >= Level.Levels.length)
-            {
-                _level = 0;
-                System.out.println("User has finished the game! Set current level to level:0");
-            }
-        }
-        //clear score
+        //set filled pipes to zero
         _filledPipes = 0;
+
         //clear game board from old pipes
         for (Pipe[] row: _board)
         {
             java.util.Arrays.fill(row, null);
         }
+
         //set new first pipe
         _firstPipe = getRandomFirstPipe();
         _board[_firstPipe.getPosition().getX()][_firstPipe.getPosition().getY()] = _firstPipe;
         _firstPipe.addObserver(this);
         _currentPipe = null;
         _isInGame = false;
+    }
+
+    public void resetGame()
+    {
+        //set level back to 0
+        _level = 0;
+        //clear total Score
+        _totalScore = 0;
+
+        clearBoardInfo();
+    }
+
+    public void nextGame()
+    {
+        //change level
+        if (shouldLoadNextLevel())
+        {
+            _level += 1;
+            //check if there are no more levels
+            if (_level >= Level.Levels.length)
+            {
+                _level = 0;
+                System.out.println("User has finished the game! Set current level to level:0");
+            }
+        }
+
+        //clear the board
+        clearBoardInfo();
     }
 
     public Level getCurrentLevel()
@@ -216,6 +238,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
                 System.out.println(String.format("Flow has started. Position:%s pipe type:%s score:%s flow direction:%s",pipe.getPosition(),pipe.getPipeType(),
                         getScore(),pipe.getFlowDirection()));
                 _filledPipes += 1;
+                _totalScore += getCurrentLevel().getPointsPerPipe();
                 notifyObservers(Pipe.FlowStatus.FLOW_STARTED_IN_PIPE);
                 break;
             case FOUND_NEXT_PIPE:
@@ -282,5 +305,10 @@ public class GameBoard extends Observable implements Observer,Serializable {
     public void incrementPassedGraceTime()
     {
         _passedGraceTime += 1;
+    }
+
+    public int getTotalScore()
+    {
+        return _totalScore;
     }
 }

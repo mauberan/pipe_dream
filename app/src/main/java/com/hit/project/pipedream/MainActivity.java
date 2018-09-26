@@ -826,12 +826,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         CreatePointsBar();
     }
 
-    public void StartNewGame() {
+    public void StartNewGame(boolean newGame) {
         requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
         requierdBlocks.updateDisplay();
         levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
-
-        gameBoard.resetGame();
+        //check if should start from scratch or continue to next level
+        if (newGame)
+        {
+            gameBoard.resetGame();
+        } else {
+            gameBoard.nextGame();
+        }
         DisplayGame();
         startGameTimer();
     }
@@ -903,7 +908,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         nextLevelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                StartNewGame();
+                StartNewGame(false);
                 Dialog.dismiss();
             }
         });
@@ -1000,7 +1005,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         newGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                StartNewGame();
+                StartNewGame(true);
                 Dialog.dismiss();
             }
         });
