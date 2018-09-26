@@ -74,7 +74,7 @@ public class ScoresTable {
 
     }
 
-    private static void saveToDevice(Context context)
+    public static void saveToDevice(Context context)
     {
         if (_globalScoresTable == null)
         {

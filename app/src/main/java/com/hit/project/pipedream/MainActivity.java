@@ -1077,18 +1077,28 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         });
     }
 
-    public void GameOverDialog(boolean isRecord) {
+    public void GameOverDialog(final boolean isRecord) {
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View gameOverDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
-
+        String buttonText = new String();
+        String statusText = new String();
         if (isRecord == true) {
-            //TODO: FINISH THIS SHIT
+            buttonText = "WoW";
+            statusText = "New Record";
+        }
+        else {
+            buttonText = "I'm a loser";
+            statusText = "Game Over";
         }
 
         builder.setCancelable(false);
+
+        LinearLayout.LayoutParams editTextParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        editTextParams.gravity = Gravity.CENTER;
+
         TextView levelDoneTextView = gameOverDialog.findViewById(R.id.dialog_title_text_view);
-        levelDoneTextView.setText("Game Over");
+        levelDoneTextView.setText(statusText);
         levelDoneTextView.setGravity(Gravity.CENTER);
         levelDoneTextView.setTextSize(60);
 
@@ -1105,13 +1115,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         pointsAndIconLine.setOrientation(LinearLayout.HORIZONTAL);
 
         points_text_view.setText("Your score: " + gameBoard.getTotalScore());
-        points_text_view.setGravity(Gravity.LEFT);
+        points_text_view.setGravity(Gravity.CENTER);
+        points_text_view.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         points_text_view.setPadding(10, 10, 10, 20);
         points_text_view.setTextSize(20);
         points_text_view.setTypeface(tf);
 
+        final EditText nicknameTv = new EditText(MainActivity.this);
+        nicknameTv.setLayoutParams(editTextParams);
+        nicknameTv.setHint("Enter your name");
+        nicknameTv.setTypeface(tf);
+        nicknameTv.setGravity(Gravity.CENTER);
+
+
         Button tryAgianButton = new Button(MainActivity.this, null, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        tryAgianButton.setText("I'm a loser");
+        tryAgianButton.setText(buttonText);
         tryAgianButton.setPadding(40, 40, 40, 40);
         tryAgianButton.setTypeface(tf);
         tryAgianButton.setTextSize(30);
@@ -1121,8 +1139,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
         LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
-        pointsAndIconLine.addView(points_text_view);
-        dialogMainLinearLayout.addView(pointsAndIconLine);
+        dialogMainLinearLayout.addView(points_text_view);
+        if (isRecord) {
+            dialogMainLinearLayout.addView(nicknameTv);
+        }
         dialogMainLinearLayout.addView(tryAgianButton);
 
         builder.setView(gameOverDialog);
@@ -1131,7 +1151,14 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             @Override
             public void onClick(View view) {
                 MainDialog();
-            }
+                if (isRecord) {
+                    ScoresTable.saveNewRecord(nicknameTv.getText().toString(),gameBoard.getTotalScore());
+                }
+                else {
+                    ScoresTable.saveNewRecord("",gameBoard.getTotalScore());
+                }
+                ScoresTable.saveToDevice(MainActivity.this);
+                }
         });
 
     }
@@ -1261,7 +1288,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public boolean IsRecord(int score) {
+
         List<ScoreRecord> records = ScoresTable.getAllScores();
+        if (records.size() < 5) {
+            return true;
+        }
         for (ScoreRecord record: records) {
             if (score > record.getScore()) {
              return true;
