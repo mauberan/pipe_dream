@@ -756,8 +756,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     protected void onResume()
     {
         super.onResume();
-        //show the main dialog
-        MainDialog();
+        //check if the main dialog already displayed
+        if (mainAlertDialog == null  || mainAlertDialog.isShowing() == false)
+        {
+            //show the main dialog
+            MainDialog();
+        }
     }
 
     @Override
