@@ -86,6 +86,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     /** alert dialogs */
     AlertDialog gameOverAlertDialog = null;
     AlertDialog nextLevelAlertDialog = null;
+    AlertDialog mainAlertDialog = null;
     /** end alert dialogs */
 
     public abstract class PipeAnimation extends AnimationDrawable {
@@ -831,9 +832,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void StartNewGame(boolean newGame) {
-        requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
-        requierdBlocks.updateDisplay();
-        levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
+
         //check if should start from scratch or continue to next level
         if (newGame)
         {
@@ -841,6 +840,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         } else {
             gameBoard.nextGame();
         }
+
+        //update UI with number of required pipes
+        requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
+        requierdBlocks.updateDisplay();
+        levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
+
         DisplayGame();
         startGameTimer();
     }
@@ -907,7 +912,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         dialogLinearLayout.addView(nextLevelButton);
 
         builder.setView(levelDoneDialog);
-        nextLevelAlertDialog = builder.show();
+        nextLevelAlertDialog = builder.create();
+        nextLevelAlertDialog.show();
 
         nextLevelButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -1027,14 +1033,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
         builder.setView(mainDialog);
-        final AlertDialog Dialog = builder.show();
+        mainAlertDialog = builder.create();
+        mainAlertDialog.show();
 
 
         newGameButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 StartNewGame(true);
-                Dialog.dismiss();
+                mainAlertDialog.dismiss();
             }
         });
 
@@ -1042,7 +1049,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         highScoreButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Dialog.dismiss();
+                mainAlertDialog.dismiss();
                 Intent intent = new Intent(MainActivity.this, ActivityScores.class);
                 startActivity(intent);
             }
@@ -1051,7 +1058,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         quitButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Dialog.dismiss();
+                mainAlertDialog.dismiss();
                 finish();
             }
         });
@@ -1072,7 +1079,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                         startGameTimer();
                     }
                 }
-                Dialog.dismiss();
+                mainAlertDialog.dismiss();
             }
         });
     }
@@ -1146,7 +1153,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         dialogMainLinearLayout.addView(tryAgianButton);
 
         builder.setView(gameOverDialog);
-        gameOverAlertDialog = builder.show();
+        gameOverAlertDialog = builder.create();
+        gameOverAlertDialog.show();
         tryAgianButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
