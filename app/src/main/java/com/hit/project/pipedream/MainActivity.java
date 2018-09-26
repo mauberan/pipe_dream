@@ -16,6 +16,7 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.text.InputFilter;
 import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;

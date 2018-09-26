@@ -20,6 +20,7 @@ import android.widget.TextView;
 import com.hit.project.pipedream.data.ScoreRecord;
 import com.hit.project.pipedream.data.ScoresTable;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Random;
 
@@ -46,10 +47,13 @@ public class ActivityScores extends Activity {
         for (ScoreRecord record: records) {
             TextView score = new TextView(ActivityScores.this);
 
+            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/YYYY");
+            String date = formatter.format(record.getDate());
+
             score.setLayoutParams(params);
-            score.setText(records.indexOf(record)+1 + ". " + record.getNickname() + " " + record.getScore() + " " + record.getDate().getDay() + "/" + record.getDate().getMonth() + "/" + record.getDate().getYear();
+            score.setText(records.indexOf(record)+1 + ". " + record.getNickname() + " " + record.getScore() + " " + date);
             score.setTypeface(tf);
-            score.setTextSize(30);
+            score.setTextSize(25);
             score.setGravity(Gravity.LEFT);
             score.setPadding(0,0,0,10);
 
