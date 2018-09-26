@@ -904,8 +904,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             @Override
             public void onClick(View view) {
                 StartNewGame();
-                levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
-                DisplayGame();
                 Dialog.dismiss();
             }
         });
