@@ -34,8 +34,10 @@ public class ActivityScores extends Activity {
 
         title.setLayoutParams(params);
         title.setText("High Scores:");
+        title.setGravity(Gravity.CENTER);
         title.setTypeface(tf);
         title.setTextSize(40);
+        title.setPadding(0,0,0,10);
         LinearLayout mainScoresLinearLayout = findViewById(R.id.high_scores_linear_layout);
         mainScoresLinearLayout.addView(title);
 
@@ -45,19 +47,16 @@ public class ActivityScores extends Activity {
             TextView score = new TextView(ActivityScores.this);
 
             score.setLayoutParams(params);
-            score.setText(records.indexOf(record) + ". " + record.getNickname() + " " + record.getScore() + " " + record.getDate());
+            score.setText(records.indexOf(record)+1 + ". " + record.getNickname() + " " + record.getScore() + " " + record.getDate().getDay() + "/" + record.getDate().getMonth() + "/" + record.getDate().getYear();
             score.setTypeface(tf);
-            score.setTextSize(40);
+            score.setTextSize(30);
+            score.setGravity(Gravity.LEFT);
+            score.setPadding(0,0,0,10);
 
             mainScoresLinearLayout.addView(score);
         }
 
-
-
-
-
-
-
+        params.gravity = Gravity.END;
 
         Button backButton = new Button(ActivityScores.this);
         backButton.setLayoutParams(params);

@@ -1298,7 +1298,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     public boolean IsRecord(int score) {
 
         List<ScoreRecord> records = ScoresTable.getAllScores();
-        if (records.size() < 5) {
+        if (records.size() < 10) {
             return true;
         }
         for (ScoreRecord record: records) {
