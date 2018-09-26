@@ -68,9 +68,9 @@ public class ScoresTable {
         catch(ClassNotFoundException e){
                 System.out.println("in saveToDevice, ClassNotFoundException:" + e.getMessage());
             }
-            if (_globalScoresTable == null) {
-                _globalScoresTable = new ArrayList<>();
-            }
+        if (_globalScoresTable == null) {
+            _globalScoresTable = new ArrayList<>();
+        }
 
     }
 
@@ -92,5 +92,4 @@ public class ScoresTable {
             System.out.println("in saveToDevice, IOException:" + e.getMessage());
         }
     }
-
 }
