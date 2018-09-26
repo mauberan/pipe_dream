@@ -646,7 +646,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     gameBoard.startGame();
 
                 }
-                levelSpeedPerFrame = 10;
+                levelSpeedPerFrame = 16;
 
             }
 
@@ -787,7 +787,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
             }
         };
-
+        if (gameTimer != null) {
+            gameTimer.cancel();
+        }
         gameTimer = new Timer();
         gameTimer.schedule(timerTasks, gameBoard.getCurrentLevel().getTimeBeforeFlow() * 1000);
     }
@@ -899,7 +901,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
 
         TextView levelDoneTextView = levelDoneDialog.findViewById(R.id.dialog_title_text_view);
-        levelDoneTextView.setText("Level " + gameBoard.getLevelNumber() + " Done");
+        levelDoneTextView.setText("Level " + (gameBoard.getLevelNumber()+1) + " Done");
         levelDoneTextView.setGravity(Gravity.CENTER);
         levelDoneTextView.setTextSize(50);
         levelDoneTextView.setPadding(0,0,0,40);
@@ -916,7 +918,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         Button nextLevelButton = new Button(MainActivity.this);
         nextLevelButton.setLayoutParams(params);
-        nextLevelButton.setText("Next Level");
+        nextLevelButton.setText("YAY");
         nextLevelButton.setPadding(40, 40, 40, 40);
         nextLevelButton.setTypeface(tf);
         nextLevelButton.setTextSize(20);
@@ -932,14 +934,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         nextLevelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                gameBoard.resetGame();
+                StartNewGame();
                 levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
                 DisplayGame();
                 Dialog.dismiss();
-
             }
         });
-
     }
 
     public void MainDialog() {
@@ -949,13 +949,13 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         builder.setCancelable(false);
 
 
-        TextView levelDoneTextView = mainDialog.findViewById(R.id.dialog_title_text_view);
-        levelDoneTextView.setText("Pipe Dream");
-        levelDoneTextView.setGravity(Gravity.CENTER);
-        levelDoneTextView.setTextSize(40);
+        TextView titleTextView = mainDialog.findViewById(R.id.dialog_title_text_view);
+        titleTextView.setText("Pipe Dream");
+        titleTextView.setGravity(Gravity.CENTER);
+        titleTextView.setTextSize(40);
 
-        levelDoneTextView.setPadding(10, 10, 10, 20);
-        levelDoneTextView.setTypeface(tf);
+        titleTextView.setPadding(10, 10, 10, 20);
+        titleTextView.setTypeface(tf);
 
 
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
