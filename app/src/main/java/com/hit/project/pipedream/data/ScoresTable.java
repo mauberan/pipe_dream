@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
@@ -35,28 +36,42 @@ public class ScoresTable {
 
     public static List<ScoreRecord> getAllScores()
     {
+        _globalScoresTable.sort(new Comparator<ScoreRecord>() {
+            @Override
+            public int compare(ScoreRecord scoreRecord, ScoreRecord other) {
+                 if (scoreRecord.getScore() ==other.getScore()) return 0;
+                 else if (scoreRecord.getScore() > other.getScore()) return 1;
+                 else return -1;
+            }
+        });
         return _globalScoresTable;
     }
 
-    private static void loadFromDevice(Context context)
-    {
+    public static void loadFromDevice(Context context) {
         try {
             FileInputStream fis = context.openFileInput(FILE_NAME);
             ObjectInputStream is = new ObjectInputStream(fis);
             Object dataFromFile = is.readObject();
-            if (dataFromFile == null)
-            {
-                _globalScoresTable = new ArrayList<>();
-                System.out.println("in loadFromDevice,no data on file.");
-            }else {
-                _globalScoresTable = (ArrayList<ScoreRecord>)dataFromFile;
+            if (dataFromFile != null) {
+
+                    _globalScoresTable = (ArrayList<ScoreRecord>) dataFromFile;
+                }
+                is.close();
+                fis.close();
             }
-            is.close();
-            fis.close();
-        }
-        catch (FileNotFoundException e) { System.out.println("in saveToDevice, FileNotFoundException:" + e.getMessage());}
-        catch (IOException e) {System.out.println("in saveToDevice, IOException:" + e.getMessage());}
-        catch (ClassNotFoundException e) {System.out.println("in saveToDevice, ClassNotFoundException:" + e.getMessage());}
+        catch(FileNotFoundException e){
+                System.out.println("in saveToDevice, FileNotFoundException:" + e.getMessage());
+            }
+        catch(IOException e){
+                System.out.println("in saveToDevice, IOException:" + e.getMessage());
+            }
+        catch(ClassNotFoundException e){
+                System.out.println("in saveToDevice, ClassNotFoundException:" + e.getMessage());
+            }
+            if (_globalScoresTable == null) {
+                _globalScoresTable = new ArrayList<>();
+            }
+
     }
 
     private static void saveToDevice(Context context)

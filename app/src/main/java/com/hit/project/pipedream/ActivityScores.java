@@ -17,6 +17,10 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.hit.project.pipedream.data.ScoreRecord;
+import com.hit.project.pipedream.data.ScoresTable;
+
+import java.util.List;
 import java.util.Random;
 
 public class ActivityScores extends Activity {
@@ -32,6 +36,28 @@ public class ActivityScores extends Activity {
         title.setText("High Scores:");
         title.setTypeface(tf);
         title.setTextSize(40);
+        LinearLayout mainScoresLinearLayout = findViewById(R.id.high_scores_linear_layout);
+        mainScoresLinearLayout.addView(title);
+
+        List<ScoreRecord> records = ScoresTable.getAllScores();
+
+        for (ScoreRecord record: records) {
+            TextView score = new TextView(ActivityScores.this);
+
+            score.setLayoutParams(params);
+            score.setText(records.indexOf(record) + ". " + record.getNickname() + " " + record.getScore() + " " + record.getDate());
+            score.setTypeface(tf);
+            score.setTextSize(40);
+
+            mainScoresLinearLayout.addView(score);
+        }
+
+
+
+
+
+
+
 
         Button backButton = new Button(ActivityScores.this);
         backButton.setLayoutParams(params);
@@ -49,8 +75,7 @@ public class ActivityScores extends Activity {
             }
         });
 
-        LinearLayout mainScoresLinearLayout = findViewById(R.id.high_scores_linear_layout);
-        mainScoresLinearLayout.addView(title);
+
         mainScoresLinearLayout.addView(backButton);
 
 

@@ -50,6 +50,8 @@ import java.util.Hashtable;
 import java.util.Observable;
 import java.util.Observer;
 
+import com.hit.project.pipedream.data.ScoreRecord;
+import com.hit.project.pipedream.data.ScoresTable;
 import com.hit.project.pipedream.logic.GameBoard;
 import com.hit.project.pipedream.logic.Pipe;
 import com.hit.project.pipedream.logic.Point;
@@ -91,17 +93,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         Handler mAnimationHandler;
 
         public PipeAnimation(AnimationDrawable aniDrawable, int levelFlowTimePerFrame) {
-            /* Add each frame to our animation drawable */
-//         for (int i = 0; i < aniDrawable.getNumberOfFrames(); i++) {
-//             this.addFrame(aniDrawable.getFrame(i), aniDrawable.getDuration(i));
-//         }
-            int i = 0;
-//         for (; i < 18; i++) {
-//                 this.addFrame(aniDrawable.getFrame(i), 0);
-//
-//         }
 
-            //time manipulation
+            int i = 0;
+
             for (; i < aniDrawable.getNumberOfFrames(); i++) {
 
                 this.addFrame(aniDrawable.getFrame(i), levelFlowTimePerFrame);
@@ -582,12 +576,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             case FOUND_NEXT_PIPE:
                 break;
             case GAMEOVER:
-                this.GameOverDialog(false);
+
+                this.GameOverDialog(IsRecord(gameBoard.getTotalScore()));
+
                 try {
                     Thread.sleep(500);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 break;
             case NEXT_LEVEL:
                 LevelDoneDialog();
@@ -629,6 +626,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
             w.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS);
@@ -663,6 +661,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         //show and initialize "next pipes" box
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
+        ScoresTable.loadFromDevice(MainActivity.this);
+
     }
 
     private GameBoard getGameBoard()
@@ -721,7 +721,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     public void UpdatePointBar() {
         TextView scoreTextView = findViewById(R.id.points_text_view);
-        scoreTextView.setText(gameBoard.getScore() + "");
+        scoreTextView.setText(gameBoard.getTotalScore() + "");
     }
 
     public void startGameTimer()
@@ -942,21 +942,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         View mainDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         builder.setCancelable(false);
-
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        );
 
         TextView titleTextView = mainDialog.findViewById(R.id.dialog_title_text_view);
         titleTextView.setText("Pipe Dream");
         titleTextView.setGravity(Gravity.CENTER);
         titleTextView.setTextSize(40);
-
-        titleTextView.setPadding(10, 10, 10, 20);
+        titleTextView.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+        titleTextView.setPadding(10, 10, 10, 40);
         titleTextView.setTypeface(tf);
 
 
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        );
+
         params.setMargins(0, 0, 0, 40);
 
         LinearLayout dialogMainLinearLayout = mainDialog.findViewById(R.id.dialog_main);
@@ -1079,10 +1079,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         levelDoneTextView.setPadding(10, 10, 10, 20);
         levelDoneTextView.setTypeface(tf);
 
-        ImageView dialogIcon = new ImageView(MainActivity.this, null, LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        dialogIcon.setImageResource(R.drawable.ic_game_over);
-        dialogIcon.setScaleType(ImageView.ScaleType.FIT_XY);
-
 
         TextView points_text_view = null;
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
@@ -1092,7 +1088,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         LinearLayout pointsAndIconLine = new LinearLayout(MainActivity.this, null, LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         pointsAndIconLine.setOrientation(LinearLayout.HORIZONTAL);
 
-        points_text_view.setText("Your score: " + gameBoard.getScore());
+        points_text_view.setText("Your score: " + gameBoard.getTotalScore());
         points_text_view.setGravity(Gravity.LEFT);
         points_text_view.setPadding(10, 10, 10, 20);
         points_text_view.setTextSize(20);
@@ -1109,7 +1105,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
 
         LinearLayout dialogMainLinearLayout = gameOverDialog.findViewById(R.id.dialog_main);
-        pointsAndIconLine.addView(dialogIcon);
         pointsAndIconLine.addView(points_text_view);
         dialogMainLinearLayout.addView(pointsAndIconLine);
         dialogMainLinearLayout.addView(tryAgianButton);
@@ -1199,7 +1194,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         point_bar.setTextSize(50);
         point_bar.setGravity(Gravity.LEFT);
         point_bar.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
-        point_bar.setText(gameBoard.getScore() + "");
+        point_bar.setText(gameBoard.getTotalScore() + "");
     }
 
     public void SetLevelBackground(int levelNumber) {
@@ -1247,5 +1242,16 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             default:
                 backgroundLayout.setBackgroundResource(R.drawable.background_level_4);
         }
+    }
+
+    public boolean IsRecord(int score) {
+        List<ScoreRecord> records = ScoresTable.getAllScores();
+        for (ScoreRecord record: records) {
+            if (score > record.getScore()) {
+             return true;
+            }
+
+        }
+        return false;
     }
 }
