@@ -274,7 +274,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
         return _isInGame;
     }
 
-    private boolean shouldLoadNextLevel()
+    public boolean shouldLoadNextLevel()
     {
         return _filledPipes >= Level.Levels[_level].getRequiredPipeLength();
     }

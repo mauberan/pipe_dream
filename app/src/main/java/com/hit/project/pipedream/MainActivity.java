@@ -878,6 +878,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         View levelDoneDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
 
+        builder.setCancelable(false);
         TextView levelDoneTextView = levelDoneDialog.findViewById(R.id.dialog_title_text_view);
         levelDoneTextView.setText("Level " + (gameBoard.getLevelNumber()+1) + " Done");
         levelDoneTextView.setGravity(Gravity.CENTER);
@@ -906,20 +907,20 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         dialogLinearLayout.addView(nextLevelButton);
 
         builder.setView(levelDoneDialog);
-        final AlertDialog Dialog = builder.show();
+        nextLevelAlertDialog = builder.show();
 
         nextLevelButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 StartNewGame(false);
-                Dialog.dismiss();
+                nextLevelAlertDialog.dismiss();
             }
         });
     }
 
     public boolean shouldShowContinueButton()
     {
-        return ( (gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) );
+        return ( (gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) || (gameBoard.shouldLoadNextLevel() == true) );
     }
 
     public void closeOpenDialogs()
@@ -930,6 +931,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             if (gameOverAlertDialog.isShowing())
             {
                 gameOverAlertDialog.dismiss();
+            }
+        }
+
+        //close next level dialog
+        if (nextLevelAlertDialog != null)
+        {
+            if (nextLevelAlertDialog.isShowing())
+            {
+                nextLevelAlertDialog.dismiss();
             }
         }
     }
@@ -1055,7 +1065,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
                     currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(), currentFlowingPipe.getNumOfVisits());
                 } else {
-                    startGameTimer();
+                    if (gameBoard.shouldLoadNextLevel())
+                    {
+                        StartNewGame(false);
+                    }else {
+                        startGameTimer();
+                    }
                 }
                 Dialog.dismiss();
             }
@@ -1071,6 +1086,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             //TODO: FINISH THIS SHIT
         }
 
+        builder.setCancelable(false);
         TextView levelDoneTextView = gameOverDialog.findViewById(R.id.dialog_title_text_view);
         levelDoneTextView.setText("Game Over");
         levelDoneTextView.setGravity(Gravity.CENTER);
