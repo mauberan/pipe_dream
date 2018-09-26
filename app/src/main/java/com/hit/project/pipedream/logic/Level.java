@@ -1,6 +1,8 @@
 package com.hit.project.pipedream.logic;
 
-public class Level {
+import java.io.Serializable;
+
+public class Level implements Serializable {
 
 
     public static Level[] Levels = {new Level(5,10,50,LevelDifficulty.EASY,60),

@@ -13,11 +13,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
     private Pipe _firstPipe;
     private int _level;
     private boolean _isInGame;
-
-    /* CONSTANTS */
-    private static final int SCORE_PER_PIPE = 50;
-    private static final int TIME_BEFORE_FLOW = 12*1000;
-    /* END CONSTANTS */
+    private int _passedGraceTime;
 
     public GameBoard(int rowColumnSize)
     {
@@ -29,6 +25,17 @@ public class GameBoard extends Observable implements Observer,Serializable {
         _level = 0;
         _filledPipes = 0;
         _isInGame = false;
+    }
+
+    public void fixObserver()
+    {
+        for (int i = 0; i < _rowColumnSize; i++ ) {
+            for (int j = 0; j < _rowColumnSize; j++) {
+                if ( _board[i][j] != null) {
+                    _board[i][j].addObserver(this);
+                }
+            }
+        }
     }
 
     public void injectFirstPipe(Pipe firstPipe)
@@ -86,6 +93,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
         }
         _currentPipe = _firstPipe;
         _isInGame = true;
+        _passedGraceTime = 0;
         _firstPipe.startFlow();
     }
 
@@ -264,5 +272,15 @@ public class GameBoard extends Observable implements Observer,Serializable {
 
     public int getLevelNumber() {
         return _level;
+    }
+
+    public int getPassedGraceTime()
+    {
+        return _passedGraceTime;
+    }
+
+    public void incrementPassedGraceTime()
+    {
+        _passedGraceTime += 1;
     }
 }

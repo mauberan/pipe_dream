@@ -13,6 +13,7 @@ import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.util.AttributeSet;
@@ -71,15 +72,15 @@ import java.util.TimerTask;
 import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PIPE;
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer {
+    private static final String SAVED_BOARD_FILE_NAME = "gameBoard.dat";
     GameBoard gameBoard;
     Map<Point, BoxButton> layoutBoard = new HashMap<>();
-
+    CountDownTimer timer;
     int levelSpeedPerFrame = 50;
-    boolean isRunning = false;
+    boolean shouldPlayAnimation = false;
 
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
-    TimerTask timerTasks;
-    Timer gameTimer;
+
 
     public abstract class PipeAnimation extends AnimationDrawable {
 
@@ -447,7 +448,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 @Override
                 public void onAnimationFinish() {
                     System.out.println("ANIM FINISHED");
-                    if (isRunning) {
+                    if (shouldPlayAnimation) {
                         gameBoard.notifyPipeIsFull();
                     }
                 }
@@ -570,13 +571,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     }
                 });
                 System.out.println(String.format("pipe location:%s flow direction:%s", gameBoard.getCurrentPipe().getPosition(), gameBoard.getCurrentPipe().getFlowDirection()));
-//               currentPipe.g
                 UpdatePointBar();
                 requierdBlocks.DecrementAmount();
 
                 break;
             case FOUND_NEXT_PIPE:
-//                 Toast.makeText(this, "FOUND NEXT PIPE", Toast.LENGTH_LONG).show();
                 break;
             case GAMEOVER:
                 this.GameOverDialog(false);
@@ -586,7 +585,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     e.printStackTrace();
                 }
                 break;
-
             case NEXT_LEVEL:
                 LevelDoneDialog();
 
@@ -600,7 +598,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     @Override
     public void onBackPressed() {
         PauseGame();
-//        MainDialog();
+        MainDialog();
     }
 
     @Override
@@ -636,36 +634,85 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         TextView title = findViewById(R.id.title_text_box);
         title.setTypeface(tf);
 
+        //get saved GameBoard or create new one if not exists
+        gameBoard = getGameBoard();
+        //register as observer
+        gameBoard.addObserver(this);
+        //create layout for the game board and load already positioned pipes
+        InitializeBoard();
+        DisplayGame();
+
         ImageButton fastForward = findViewById(R.id.fast_forward_button);
         fastForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (gameTimer != null) {
-                    gameTimer.cancel();
-                    gameTimer = null;
+                if (gameBoard.getIsInGame() == false) {
+                    timer.cancel();
+                    shouldPlayAnimation = true;
                     gameBoard.startGame();
-
                 }
                 levelSpeedPerFrame = 16;
-
             }
 
         });
 
-        InitializeBoard();
-//        CreatePointsBar();
-//
-//        requierdBlocks.setNewRequiredAmount(levelRequiredBlocks);
-//        requierdBlocks.updateDisplay();
-
-
-
-        MainDialog();
-
+        //show and initialize "next pipes" box
         nextBar.InitializeBlockBar();
         nextBar.DrawBar();
+    }
 
+    private GameBoard getGameBoard()
+    {
+        GameBoard newGameBoard = null;
+        try {
 
+            File gameBoardFile =  this.getApplicationContext().getFileStreamPath(SAVED_BOARD_FILE_NAME);
+            if (gameBoardFile.exists())
+            {
+                FileInputStream fis = this.getApplicationContext().openFileInput(SAVED_BOARD_FILE_NAME);
+                ObjectInputStream is = new ObjectInputStream(fis);
+                Object dataFromFile = is.readObject();
+                if (dataFromFile != null)
+                {
+                    newGameBoard = (GameBoard)dataFromFile;
+                    newGameBoard.fixObserver();
+
+                }
+                is.close();
+                fis.close();
+                //we don't need this file anymore - delete it from the filesystem
+                gameBoardFile.delete();
+            }
+        }
+        catch (FileNotFoundException e) { System.out.println("in getGameBoard, FileNotFoundException:" + e.getMessage());}
+        catch (IOException e) {System.out.println("in getGameBoard, IOException:" + e.getMessage());}
+        catch (ClassNotFoundException e) {System.out.println("in getGameBoard, ClassNotFoundException:" + e.getMessage());}
+
+        if (newGameBoard == null)
+        {
+            newGameBoard = new GameBoard(7);
+        }
+
+        return newGameBoard;
+    }
+
+    public void SaveGame() {
+        if (gameBoard == null)
+        {
+            System.out.println("in SaveGame, gameBoard is null!");
+            return;
+        }
+        try {
+            //save GameBoard on the filesystem
+            FileOutputStream fos = this.getApplicationContext().openFileOutput(SAVED_BOARD_FILE_NAME, Context.MODE_PRIVATE);
+            ObjectOutputStream os = new ObjectOutputStream(fos);
+            os.writeObject(gameBoard);
+            os.close();
+            fos.close();
+        }
+        catch (IOException e) {
+            System.out.println("in SaveGame, IOException:" + e.getMessage());
+        }
     }
 
     public void UpdatePointBar() {
@@ -673,28 +720,45 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         scoreTextView.setText(gameBoard.getScore() + "");
     }
 
+    public void startGameTimer()
+    {
+        int levelGraceTime = gameBoard.getCurrentLevel().getTimeBeforeFlow();
+        int remainingGraceTime = levelGraceTime - gameBoard.getPassedGraceTime();
+        timer = new CountDownTimer(remainingGraceTime * 1000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                gameBoard.incrementPassedGraceTime();
+            }
+
+            public void onFinish() {
+                MainActivity.this.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        shouldPlayAnimation = true;
+                        gameBoard.startGame();
+                    }
+                });
+            }
+        }.start();
+    }
 
     @Override
     protected void onStart() {
         super.onStart();
+    }
 
-        DisplayGame();
-        gameBoard.addObserver(this);
-        isRunning = true;
-        if (gameBoard.getIsInGame()) {
-            Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
-            BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
-            currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(), currentFlowingPipe.getNumOfVisits());
-        }
-
-
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        //show the main dialog
+        MainDialog();
     }
 
     @Override
     protected void onPause() {
         super.onPause();
         PauseGame();
-
     }
 
     public void InitializeBoard() {
@@ -760,124 +824,31 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         requierdBlocks.updateDisplay();
 
         CreatePointsBar();
-
-
     }
 
     public void StartNewGame() {
-
         requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
         requierdBlocks.updateDisplay();
         levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
 
         gameBoard.resetGame();
         DisplayGame();
-        timerTasks = new TimerTask() {
-            @Override
-            public void run() {
-
-                MainActivity.this.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        gameBoard.startGame();
-                        gameTimer = null;
-
-                    }
-                });
-
-            }
-        };
-        if (gameTimer != null) {
-            gameTimer.cancel();
-        }
-        gameTimer = new Timer();
-        gameTimer.schedule(timerTasks, gameBoard.getCurrentLevel().getTimeBeforeFlow() * 1000);
-    }
-
-    public boolean IsSavedGameExists() {
-        File file = getBaseContext().getFileStreamPath("GameBoard");
-        Toast.makeText(this, file.exists() + "",
-                Toast.LENGTH_LONG).show();
-        return file.exists();
-    }
-
-    public void ResumeSavedGame() {
-
+        startGameTimer();
     }
 
     public void PauseGame() {
+        shouldPlayAnimation = false;
+
         if (gameBoard.getIsInGame()) {
             System.out.println("GAME PAUSED");
             Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
             BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
             AnimationDrawable animation = (AnimationDrawable) currentFlowingBox.getDrawable();
-            isRunning = false;
             animation.stop();
+        }else if (timer != null) {
+            timer.cancel();
         }
-
         SaveGame();
-
-
-    }
-
-    public void SaveGame() {
-        try {
-            FileOutputStream fos = openFileOutput("gameBoard", MODE_PRIVATE);
-            ObjectOutputStream oos = new ObjectOutputStream(fos);
-            oos.writeObject(gameBoard);
-            oos.close();
-
-            fos = openFileOutput("isRunning", MODE_PRIVATE);
-            DataOutputStream dos = new DataOutputStream(fos);
-            dos.writeBoolean(isRunning);
-            dos.close();
-
-
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void EmptyMemory() {
-        File file = new File("gameBoard");
-        if (file.exists()) {
-            file.delete();
-        }
-        file = new File("isRunning");
-        if (file.exists()) {
-            file.delete();
-        }
-    }
-
-    public boolean LoadGameFromMemory() {
-        try {
-            if (IsSavedGameExists()) {
-                FileInputStream fis = openFileInput("gameBoard");
-                ObjectInputStream ois = new ObjectInputStream(fis);
-                gameBoard = (GameBoard) ois.readObject();
-
-                fis.close();
-
-            } else {
-                gameBoard = new GameBoard(7);
-                return false;
-            }
-
-            FileInputStream fis = openFileInput("isRunning");
-            DataInputStream dis = new DataInputStream(fis);
-            isRunning = dis.readBoolean();
-            dis.close();
-
-            EmptyMemory();
-
-        } catch (IOException e) {
-
-        } catch (ClassNotFoundException e) {
-
-        }
-        return true;
     }
 
     public BoxButton getBoxFromPoint(Point point) {
@@ -887,8 +858,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         }
 
         return null;
-
-
     }
 
     public BoxButton getBoxFromPipe(Pipe pipe) {
@@ -940,6 +909,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 Dialog.dismiss();
             }
         });
+    }
+
+    public boolean shouldShowContinueButton()
+    {
+        return ( (gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) );
     }
 
     public void MainDialog() {
@@ -1011,7 +985,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         quitButton.setBackgroundResource(R.drawable.menu_button_border);
 
 
-        if (LoadGameFromMemory()) {
+        if (shouldShowContinueButton()) {
 
             dialogMainLinearLayout.addView(continueButton);
 
@@ -1054,7 +1028,14 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                onResume();
+                if (gameBoard.getIsInGame()) {
+                    shouldPlayAnimation = true;
+                    Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
+                    BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
+                    currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(), currentFlowingPipe.getNumOfVisits());
+                } else {
+                    startGameTimer();
+                }
                 Dialog.dismiss();
             }
         });
@@ -1117,7 +1098,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         tryAgianButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                EmptyMemory();
                 Dialog.dismiss();
                 MainDialog();
             }
@@ -1246,10 +1226,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 break;
             default:
                 backgroundLayout.setBackgroundResource(R.drawable.background_level_4);
-
-
         }
-
-
     }
 }
