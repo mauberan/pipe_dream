@@ -73,14 +73,18 @@ import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PI
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer {
     private static final String SAVED_BOARD_FILE_NAME = "gameBoard.dat";
+
     GameBoard gameBoard;
     Map<Point, BoxButton> layoutBoard = new HashMap<>();
     CountDownTimer timer;
     int levelSpeedPerFrame = 50;
     boolean shouldPlayAnimation = false;
-
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
 
+    /** alert dialogs */
+    AlertDialog gameOverAlertDialog = null;
+    AlertDialog nextLevelAlertDialog = null;
+    /** end alert dialogs */
 
     public abstract class PipeAnimation extends AnimationDrawable {
 
@@ -901,7 +905,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         nextLevelButton.setBackgroundResource(R.drawable.menu_button_border);
         dialogLinearLayout.addView(nextLevelButton);
 
-
         builder.setView(levelDoneDialog);
         final AlertDialog Dialog = builder.show();
 
@@ -919,7 +922,22 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         return ( (gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) );
     }
 
+    public void closeOpenDialogs()
+    {
+        //close game over dialog
+        if (gameOverAlertDialog != null)
+        {
+            if (gameOverAlertDialog.isShowing())
+            {
+                gameOverAlertDialog.dismiss();
+            }
+        }
+    }
+
     public void MainDialog() {
+        //close any open dialog
+        closeOpenDialogs();
+
         AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
         View mainDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
@@ -1097,11 +1115,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         dialogMainLinearLayout.addView(tryAgianButton);
 
         builder.setView(gameOverDialog);
-        final AlertDialog Dialog = builder.show();
+        gameOverAlertDialog = builder.show();
         tryAgianButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Dialog.dismiss();
                 MainDialog();
             }
         });
