@@ -39,8 +39,8 @@ public class ScoresTable {
         _globalScoresTable.sort(new Comparator<ScoreRecord>() {
             @Override
             public int compare(ScoreRecord scoreRecord, ScoreRecord other) {
-                 if (scoreRecord.getScore() ==other.getScore()) return 0;
-                 else if (scoreRecord.getScore() > other.getScore()) return 1;
+                 if (scoreRecord.getScore() == other.getScore()) return 0;
+                 else if (scoreRecord.getScore() < other.getScore()) return 1;
                  else return -1;
             }
         });

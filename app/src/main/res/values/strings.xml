@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">PipeDream</string>
+    <string name="str_logo">Pipe Dream</string>
+    <string name="str_your_score">Your score is:</string>
+    <string name="str_level">level</string>
+    <string name="str_done">done</string>
+    <string name="str_level_done_button">yay</string>
+    <string name="str_gameover_text">Game Over</string>
+    <string name="str_gameover_button">i`m a loser</string>
+    <string name="str_new_record_text">New Record</string>
+    <string name="str_new_record_hint">Enter your name</string>
+    <string name="str_new_record_button">wow</string>
+    <string name="str_main_dialog_new_game">New Game</string>
+    <string name="str_main_dialog_continue">Continue</string>
+    <string name="str_main_dialog_highscores">High Scores</string>
+    <string name="str_main_dialog_quit">Quit</string>
+    <string name="str_scores_activity_back_button">Back</string>
+    <string name="str_scores_activity_title">High Scores:</string>
+
 </resources>

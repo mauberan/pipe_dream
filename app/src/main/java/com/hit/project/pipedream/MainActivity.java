@@ -2,22 +2,19 @@ package com.hit.project.pipedream;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.AssetManager;
-import android.content.res.Resources;
+import android.content.ServiceConnection;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.AnimationDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.text.InputFilter;
-import android.util.AttributeSet;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,24 +27,17 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RadioButton;
-import android.widget.Space;
 import android.widget.TextView;
-import android.widget.Toast;
+import android.os.IBinder;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
-import java.util.Dictionary;
-import java.util.Enumeration;
-import java.util.Hashtable;
+
 import java.util.Observable;
 import java.util.Observer;
 
@@ -57,22 +47,13 @@ import com.hit.project.pipedream.logic.GameBoard;
 import com.hit.project.pipedream.logic.Pipe;
 import com.hit.project.pipedream.logic.Point;
 
-import org.w3c.dom.Text;
-
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ListIterator;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import static com.hit.project.pipedream.logic.Pipe.FlowStatus.FLOW_STARTED_IN_PIPE;
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer {
     private static final String SAVED_BOARD_FILE_NAME = "gameBoard.dat";
@@ -84,70 +65,46 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     boolean shouldPlayAnimation = false;
     RequierdBoxesBar requierdBlocks = new RequierdBoxesBar();
 
-    /** alert dialogs */
+    /**
+     * alert dialogs
+     */
     AlertDialog gameOverAlertDialog = null;
     AlertDialog nextLevelAlertDialog = null;
     AlertDialog mainAlertDialog = null;
     /** end alert dialogs */
 
-    public abstract class PipeAnimation extends AnimationDrawable {
+    /**
+     * background music services
+     */
 
-        Handler mAnimationHandler;
+    private boolean mIsBound = false;
+    private boolean misPlaying = false;
+    private MusicService mServ;
+    private ServiceConnection Scon = new ServiceConnection() {
 
-        public PipeAnimation(AnimationDrawable aniDrawable, int levelFlowTimePerFrame) {
-
-            int i = 0;
-
-            for (; i < aniDrawable.getNumberOfFrames(); i++) {
-
-                this.addFrame(aniDrawable.getFrame(i), levelFlowTimePerFrame);
-
-            }
-            this.setOneShot(true);
-
+        public void onServiceConnected(ComponentName name, IBinder
+                binder) {
+            mServ = ((MusicService.ServiceBinder) binder).getService();
         }
 
-        @Override
-        public void start() {
-            super.start();
-
-            mAnimationHandler = new Handler();
-            mAnimationHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    onAnimationStart();
-                }
-            });
-            mAnimationHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    onAnimationFinish();
-                }
-            }, getTotalDuration());
-
+        public void onServiceDisconnected(ComponentName name) {
+            mServ = null;
         }
+    };
 
-        public int getTotalDuration() {
-
-            int iDuration = 0;
-
-            for (int i = 0; i < this.getNumberOfFrames(); i++) {
-                iDuration += this.getDuration(i);
-            }
-
-            return iDuration;
-        }
-
-        public abstract void onAnimationFinish();
-
-        public abstract void onAnimationStart();
-
-        public Drawable SkipAnimation() {
-            return this.getFrame(getNumberOfFrames() - 1);
-        }
-
-
+    void doBindService() {
+        bindService(new Intent(this, MusicService.class),
+                Scon, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
     }
+
+    void doUnbindService() {
+        if (mIsBound) {
+            unbindService(Scon);
+            mIsBound = false;
+        }
+    }
+
 
     public class RequierdBoxesBar {
         int requiredPipes = 0;
@@ -292,7 +249,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         public void AnimateClick() {
             this.setImageResource(R.drawable.ic_wrench);
-
 
             Animation a = new RotateAnimation(0.0f, 360.0f,
                     Animation.RELATIVE_TO_SELF, 0.5f, Animation.RELATIVE_TO_SELF,
@@ -561,6 +517,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         switch (currentPipeFlowStatus) {
             case FLOW_STARTED_IN_PIPE:
+
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
@@ -568,8 +525,14 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                         BoxButton box = getBoxFromPipe(currentPipe);
 
                         box.AnimateFlow(currentPipe.getFlowDirection(), currentPipe.getNumOfVisits());
+//                        if (gameBoard.getCurrentPipe() != gameBoard.getFirstPipe()) {
+//                            MediaPlayer point_sound = MediaPlayer.create(MainActivity.this, R.raw.point_sound);
+//                            point_sound.start();
+//                        }
+
                     }
                 });
+
                 System.out.println(String.format("pipe location:%s flow direction:%s", gameBoard.getCurrentPipe().getPosition(), gameBoard.getCurrentPipe().getFlowDirection()));
                 UpdatePointBar();
                 requierdBlocks.DecrementAmount();
@@ -618,6 +581,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         boolean result = gameBoard.addPipeToBoard(box.getPoint(), nextType);
 
         if (result) {
+            MediaPlayer ratchet = MediaPlayer.create(MainActivity.this, R.raw.wrench01);
+            ratchet.start();
+
             box.setType(nextBar.OnClickAction());
             box.AnimateClick();
         }
@@ -627,6 +593,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Intent music = new Intent();
+        music.setClass(this, MusicService.class);
+        startService(music);
+        misPlaying = true;
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
@@ -654,6 +624,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     timer.cancel();
                     shouldPlayAnimation = true;
                     gameBoard.startGame();
+                    MediaPlayer startFlowSound = MediaPlayer.create(MainActivity.this, R.raw.start_flowing);
+                    startFlowSound.start();
                 }
                 levelSpeedPerFrame = 16;
             }
@@ -667,20 +639,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     }
 
-    private GameBoard getGameBoard()
-    {
+    private GameBoard getGameBoard() {
         GameBoard newGameBoard = null;
         try {
 
-            File gameBoardFile =  this.getApplicationContext().getFileStreamPath(SAVED_BOARD_FILE_NAME);
-            if (gameBoardFile.exists())
-            {
+            File gameBoardFile = this.getApplicationContext().getFileStreamPath(SAVED_BOARD_FILE_NAME);
+            if (gameBoardFile.exists()) {
                 FileInputStream fis = this.getApplicationContext().openFileInput(SAVED_BOARD_FILE_NAME);
                 ObjectInputStream is = new ObjectInputStream(fis);
                 Object dataFromFile = is.readObject();
-                if (dataFromFile != null)
-                {
-                    newGameBoard = (GameBoard)dataFromFile;
+                if (dataFromFile != null) {
+                    newGameBoard = (GameBoard) dataFromFile;
                     newGameBoard.fixObserver();
 
                 }
@@ -689,13 +658,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 //we don't need this file anymore - delete it from the filesystem
                 gameBoardFile.delete();
             }
+        } catch (FileNotFoundException e) {
+            System.out.println("in getGameBoard, FileNotFoundException:" + e.getMessage());
+        } catch (IOException e) {
+            System.out.println("in getGameBoard, IOException:" + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.out.println("in getGameBoard, ClassNotFoundException:" + e.getMessage());
         }
-        catch (FileNotFoundException e) { System.out.println("in getGameBoard, FileNotFoundException:" + e.getMessage());}
-        catch (IOException e) {System.out.println("in getGameBoard, IOException:" + e.getMessage());}
-        catch (ClassNotFoundException e) {System.out.println("in getGameBoard, ClassNotFoundException:" + e.getMessage());}
 
-        if (newGameBoard == null)
-        {
+        if (newGameBoard == null) {
             newGameBoard = new GameBoard(7);
         }
 
@@ -703,8 +674,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void SaveGame() {
-        if (gameBoard == null)
-        {
+        if (gameBoard == null) {
             System.out.println("in SaveGame, gameBoard is null!");
             return;
         }
@@ -715,8 +685,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             os.writeObject(gameBoard);
             os.close();
             fos.close();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.out.println("in SaveGame, IOException:" + e.getMessage());
         }
     }
@@ -726,8 +695,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         scoreTextView.setText(gameBoard.getTotalScore() + "");
     }
 
-    public void startGameTimer()
-    {
+    public void startGameTimer() {
         int levelGraceTime = gameBoard.getCurrentLevel().getTimeBeforeFlow();
         int remainingGraceTime = levelGraceTime - gameBoard.getPassedGraceTime();
         timer = new CountDownTimer(remainingGraceTime * 1000, 1000) {
@@ -742,6 +710,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     public void run() {
                         shouldPlayAnimation = true;
                         gameBoard.startGame();
+                        MediaPlayer startFlowSound = MediaPlayer.create(MainActivity.this, R.raw.start_flowing);
+                        startFlowSound.start();
                     }
                 });
             }
@@ -751,15 +721,20 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     @Override
     protected void onStart() {
         super.onStart();
+
+
     }
 
     @Override
-    protected void onResume()
-    {
+    protected void onResume() {
         super.onResume();
+        if (!misPlaying) {
+            mServ.resumeMusic();
+            misPlaying = true;
+        }
+
         //check if the main dialog already displayed
-        if (mainAlertDialog == null  || mainAlertDialog.isShowing() == false)
-        {
+        if (mainAlertDialog == null || mainAlertDialog.isShowing() == false) {
             //show the main dialog
             MainDialog();
         }
@@ -767,8 +742,13 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     protected void onPause() {
+//        Intent music = new Intent(MainActivity.this, MusicService.class);
+//        stopService(music);
+
         super.onPause();
-        PauseGame();
+        mServ.pauseMusic();
+
+    PauseGame();
     }
 
     public void InitializeBoard() {
@@ -795,6 +775,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 newButton.setScaleX(1);
                 newButton.setScaleY(1);
                 newButton.setRotation(0);
+                newButton.setSoundEffectsEnabled(false);
 
                 newButton.setPoint(new Point(i, j));
                 newButton.setOnClickListener(MainActivity.this);
@@ -811,7 +792,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void DisplayGame() {
-        SetLevelBackground(gameBoard.getLevelNumber());
+        SetLevelBackground(gameBoard.getLevelNumber() + 1);
 
         for (Map.Entry<Point, BoxButton> entry : layoutBoard.entrySet()) {
             BoxButton box = entry.getValue();
@@ -839,12 +820,16 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     public void StartNewGame(boolean newGame) {
 
         //check if should start from scratch or continue to next level
-        if (newGame)
-        {
+        if (newGame) {
             gameBoard.resetGame();
         } else {
             gameBoard.nextGame();
         }
+
+        MediaPlayer bellNewGame = MediaPlayer.create(MainActivity.this, R.raw.bell2);
+        bellNewGame.start();
+
+
 
         //update UI with number of required pipes
         requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
@@ -858,13 +843,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     public void PauseGame() {
         shouldPlayAnimation = false;
 
+
+
         if (gameBoard.getIsInGame()) {
             System.out.println("GAME PAUSED");
             Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
             BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
             AnimationDrawable animation = (AnimationDrawable) currentFlowingBox.getDrawable();
             animation.stop();
-        }else if (timer != null) {
+        } else if (timer != null) {
             timer.cancel();
         }
         SaveGame();
@@ -888,12 +875,18 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         View levelDoneDialog = getLayoutInflater().inflate(R.layout.level_done_dialog, null);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
 
+
+        MediaPlayer woohooSound = MediaPlayer.create(MainActivity.this, R.raw.woohoo);
+        woohooSound.start();
+
+
         builder.setCancelable(false);
         TextView levelDoneTextView = levelDoneDialog.findViewById(R.id.dialog_title_text_view);
-        levelDoneTextView.setText("Level " + (gameBoard.getLevelNumber()+1) + " Done");
+        levelDoneTextView.setText(getResources().getString(R.string.str_level) + " " + (gameBoard.getLevelNumber() + 1) + " " + getResources().getString(R.string.str_done)) ;
+
         levelDoneTextView.setGravity(Gravity.CENTER);
         levelDoneTextView.setTextSize(50);
-        levelDoneTextView.setPadding(0,0,0,40);
+        levelDoneTextView.setPadding(0, 0, 0, 40);
 
 
         levelDoneTextView.setTypeface(tf);
@@ -907,7 +900,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         Button nextLevelButton = new Button(MainActivity.this);
         nextLevelButton.setLayoutParams(params);
-        nextLevelButton.setText("YAY");
+        nextLevelButton.setText(R.string.str_level_done_button);
         nextLevelButton.setPadding(40, 40, 40, 40);
         nextLevelButton.setTypeface(tf);
         nextLevelButton.setTextSize(20);
@@ -929,27 +922,21 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         });
     }
 
-    public boolean shouldShowContinueButton()
-    {
-        return ( (gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) || (gameBoard.shouldLoadNextLevel() == true) );
+    public boolean shouldShowContinueButton() {
+        return ((gameBoard.getIsInGame() == true) || (gameBoard.getPassedGraceTime() != 0) || (gameBoard.shouldLoadNextLevel() == true));
     }
 
-    public void closeOpenDialogs()
-    {
+    public void closeOpenDialogs() {
         //close game over dialog
-        if (gameOverAlertDialog != null)
-        {
-            if (gameOverAlertDialog.isShowing())
-            {
+        if (gameOverAlertDialog != null) {
+            if (gameOverAlertDialog.isShowing()) {
                 gameOverAlertDialog.dismiss();
             }
         }
 
         //close next level dialog
-        if (nextLevelAlertDialog != null)
-        {
-            if (nextLevelAlertDialog.isShowing())
-            {
+        if (nextLevelAlertDialog != null) {
+            if (nextLevelAlertDialog.isShowing()) {
                 nextLevelAlertDialog.dismiss();
             }
         }
@@ -969,13 +956,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         );
 
         TextView titleTextView = mainDialog.findViewById(R.id.dialog_title_text_view);
-        titleTextView.setText("Pipe Dream");
+        titleTextView.setText(R.string.str_logo);
         titleTextView.setGravity(Gravity.CENTER);
         titleTextView.setTextSize(40);
         titleTextView.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
         titleTextView.setPadding(10, 10, 10, 40);
         titleTextView.setTypeface(tf);
-
 
 
         params.setMargins(0, 0, 0, 40);
@@ -985,46 +971,50 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         Button continueButton = new Button(MainActivity.this);
         continueButton.setLayoutParams(params);
-        continueButton.setText("Continue");
+        continueButton.setText(R.string.str_main_dialog_continue);
         continueButton.setPadding(40, 40, 40, 40);
         continueButton.setTypeface(tf);
         continueButton.setTextSize(20);
         continueButton.setGravity(Gravity.CENTER);
         continueButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         continueButton.setBackgroundResource(R.drawable.menu_button_border);
+        continueButton.setSoundEffectsEnabled(false);
 
 
         Button newGameButton = new Button(MainActivity.this);
         newGameButton.setLayoutParams(params);
-        newGameButton.setText("New Game");
+        newGameButton.setText(R.string.str_main_dialog_new_game);
         newGameButton.setPadding(40, 40, 40, 40);
         newGameButton.setTypeface(tf);
         newGameButton.setTextSize(20);
         newGameButton.setGravity(Gravity.CENTER);
         newGameButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         newGameButton.setBackgroundResource(R.drawable.menu_button_border);
+        newGameButton.setSoundEffectsEnabled(false);
 
 
         Button highScoreButton = new Button(MainActivity.this);
         highScoreButton.setLayoutParams(params);
-        highScoreButton.setText("High Scores");
+        highScoreButton.setText(R.string.str_main_dialog_highscores);
         highScoreButton.setPadding(40, 40, 40, 40);
         highScoreButton.setTypeface(tf);
         highScoreButton.setTextSize(20);
         highScoreButton.setGravity(Gravity.CENTER);
         highScoreButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         highScoreButton.setBackgroundResource(R.drawable.menu_button_border);
+        highScoreButton.setSoundEffectsEnabled(false);
 
 
         Button quitButton = new Button(MainActivity.this);
         quitButton.setLayoutParams(params);
-        quitButton.setText("Quit Game");
+        quitButton.setText(R.string.str_main_dialog_quit);
         quitButton.setPadding(40, 40, 40, 40);
         quitButton.setTypeface(tf);
         quitButton.setTextSize(20);
         quitButton.setGravity(Gravity.CENTER);
         quitButton.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
         quitButton.setBackgroundResource(R.drawable.menu_button_border);
+        quitButton.setSoundEffectsEnabled(false);
 
 
         if (shouldShowContinueButton()) {
@@ -1047,6 +1037,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             public void onClick(View view) {
                 StartNewGame(true);
                 mainAlertDialog.dismiss();
+
+
             }
         });
 
@@ -1071,16 +1063,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         continueButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                MediaPlayer bellContinue = MediaPlayer.create(MainActivity.this, R.raw.bell2);
+                bellContinue.start();
                 if (gameBoard.getIsInGame()) {
                     shouldPlayAnimation = true;
                     Pipe currentFlowingPipe = gameBoard.getCurrentPipe();
                     BoxButton currentFlowingBox = layoutBoard.get(currentFlowingPipe.getPosition());
                     currentFlowingBox.AnimateFlow(currentFlowingPipe.getFlowDirection(), currentFlowingPipe.getNumOfVisits());
                 } else {
-                    if (gameBoard.shouldLoadNextLevel())
-                    {
+                    if (gameBoard.shouldLoadNextLevel()) {
                         StartNewGame(false);
-                    }else {
+                    } else {
                         startGameTimer();
                     }
                 }
@@ -1096,12 +1089,15 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         String buttonText = new String();
         String statusText = new String();
         if (isRecord == true) {
-            buttonText = "WoW";
-            statusText = "New Record";
-        }
-        else {
-            buttonText = "I'm a loser";
-            statusText = "Game Over";
+            buttonText = getResources().getString(R.string.str_new_record_button);
+            statusText = getResources().getString(R.string.str_new_record_text);
+            MediaPlayer newRecordSound = MediaPlayer.create(MainActivity.this, R.raw.new_record);
+            newRecordSound.start();
+        } else {
+            buttonText = getResources().getString(R.string.str_gameover_button);
+            statusText = getResources().getString(R.string.str_gameover_text);
+            MediaPlayer gameOverSound = MediaPlayer.create(MainActivity.this, R.raw.game_over);
+            gameOverSound.start();
         }
 
         builder.setCancelable(false);
@@ -1165,13 +1161,12 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             public void onClick(View view) {
                 MainDialog();
                 if (isRecord) {
-                    ScoresTable.saveNewRecord(nicknameTv.getText().toString(),gameBoard.getTotalScore());
-                }
-                else {
-                    ScoresTable.saveNewRecord("",gameBoard.getTotalScore());
+                    ScoresTable.saveNewRecord(nicknameTv.getText().toString(), gameBoard.getTotalScore());
+                } else {
+                    ScoresTable.saveNewRecord("", gameBoard.getTotalScore());
                 }
                 ScoresTable.saveToDevice(MainActivity.this);
-                }
+            }
         });
 
     }
@@ -1243,7 +1238,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public void CreatePointsBar() {
-        //point bar starts hereeee
+        //point_sound bar starts hereeee
         TextView point_bar = findViewById(R.id.points_text_view);
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         point_bar.setTypeface(tf);
@@ -1255,7 +1250,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     public void SetLevelBackground(int levelNumber) {
         LinearLayout backgroundLayout = findViewById(R.id.background_layout);
-        switch (levelNumber) {
+        int levelBack = levelNumber % 10;
+        switch (levelBack) {
             case 1:
                 backgroundLayout.setBackgroundResource(R.drawable.background_level_1);
                 break;
@@ -1291,8 +1287,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 backgroundLayout.setBackgroundResource(R.drawable.background_level_9);
 
                 break;
-            case 10:
-                backgroundLayout.setBackgroundResource(R.drawable.background_level_20);
+            case 0:
+                backgroundLayout.setBackgroundResource(R.drawable.background_level_10);
 
                 break;
             default:
@@ -1303,15 +1299,17 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     public boolean IsRecord(int score) {
 
         List<ScoreRecord> records = ScoresTable.getAllScores();
-        if (records.size() < 10) {
+        if (records.size() < 5) {
             return true;
         }
-        for (ScoreRecord record: records) {
+        for (ScoreRecord record : records) {
             if (score > record.getScore()) {
-             return true;
+                return true;
             }
 
         }
         return false;
     }
+
+
 }

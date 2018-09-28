@@ -32,9 +32,10 @@ public class ActivityScores extends Activity {
         Typeface tf = Typeface.createFromAsset(getApplicationContext().getAssets(), "fonts/" + "makhina.ttf");
         TextView title = new TextView(ActivityScores.this);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.weight = 1;
 
         title.setLayoutParams(params);
-        title.setText("High Scores:");
+        title.setText(R.string.str_scores_activity_title);
         title.setGravity(Gravity.CENTER);
         title.setTypeface(tf);
         title.setTextSize(40);
@@ -42,29 +43,39 @@ public class ActivityScores extends Activity {
         LinearLayout mainScoresLinearLayout = findViewById(R.id.high_scores_linear_layout);
         mainScoresLinearLayout.addView(title);
 
+        int numOfScores;
         List<ScoreRecord> records = ScoresTable.getAllScores();
-
-        for (ScoreRecord record: records) {
+        if (records.size() < 5) {
+            numOfScores = records.size();
+        }
+        else {
+            numOfScores = 5;
+        }
+        for (int i = 0; i < numOfScores; i++) {
             TextView score = new TextView(ActivityScores.this);
+            ScoreRecord record = records.get(i);
 
-            SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/YYYY");
-            String date = formatter.format(record.getDate());
+            if (record != null) {
+                SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/YYYY");
 
-            score.setLayoutParams(params);
-            score.setText(records.indexOf(record)+1 + ". " + record.getNickname() + " " + record.getScore() + " " + date);
-            score.setTypeface(tf);
-            score.setTextSize(25);
-            score.setGravity(Gravity.LEFT);
-            score.setPadding(0,0,0,10);
+                String date = formatter.format(record.getDate());
 
-            mainScoresLinearLayout.addView(score);
+                score.setLayoutParams(params);
+                score.setText(records.indexOf(record) + 1 + ". " + record.getNickname() + " " + record.getScore() + " " + date);
+                score.setTypeface(tf);
+                score.setTextSize(30);
+                score.setGravity(Gravity.LEFT);
+                score.setPadding(0, 0, 0, 10);
+
+                mainScoresLinearLayout.addView(score);
+            }
         }
 
         params.gravity = Gravity.END;
 
         Button backButton = new Button(ActivityScores.this);
         backButton.setLayoutParams(params);
-        backButton.setText("Back");
+        backButton.setText(R.string.str_scores_activity_back_button);
         backButton.setPadding(40,40,40,40);
         backButton.setTypeface(tf);
         backButton.setTextSize(20);

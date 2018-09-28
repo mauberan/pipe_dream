@@ -89,7 +89,7 @@ public class GameBoard extends Observable implements Observer,Serializable {
     {
         if (_firstPipe == null)
         {
-            //invalid starting point!
+            //invalid starting point_sound!
             return;
         }
         _currentPipe = _firstPipe;

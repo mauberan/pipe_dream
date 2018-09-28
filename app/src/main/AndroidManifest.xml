@@ -8,6 +8,7 @@
         android:label="@string/app_name"
         android:screenOrientation="portrait"
         android:roundIcon="@mipmap/ic_launcher_round"
+
         android:supportsRtl="true"
         android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         <activity android:name=".MainActivity">
@@ -17,7 +18,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
+        <service android:name="MusicService"
+            android:enabled="true"/>
         <activity android:name=".ActivityScores" >
             <intent-filter>
                 <!-- MAIN represents that it is the Main Activity-->
