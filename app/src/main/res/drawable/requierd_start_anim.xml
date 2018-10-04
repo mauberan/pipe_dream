@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <animation-list xmlns:android="http://schemas.android.com/apk/res/android"
+        android:oneshot ="true">
+    <item android:drawable="@drawable/ic_requierd_pipe_thumb" android:duration="1"></item>
+    <item android:drawable="@drawable/ic_requierd_pipe_thumb_red" android:duration="2500"></item>
+    <item android:drawable="@drawable/ic_requierd_pipe_thumb" android:duration="300"></item>
+
+    </animation-list>
+
+

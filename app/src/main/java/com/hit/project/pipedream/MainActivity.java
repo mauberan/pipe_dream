@@ -54,6 +54,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MainActivity extends Activity implements View.OnClickListener , Observer {
     private static final String SAVED_BOARD_FILE_NAME = "gameBoard.dat";
@@ -115,8 +117,30 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
         public void setNewRequiredAmount(int newAmount) {
             requiredPipes = newAmount;
+
             updateDisplay();
+
         }
+
+        private void animateRedStart() {
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+            for (int i = 0; i < requiredPipes; i++) {
+                ImageView thumb = (ImageView) requierdBlocksLayout.getChildAt(i);
+
+
+                AnimationDrawable anim = (AnimationDrawable) thumb.getDrawable();
+                anim.start();
+            }
+        }
+
+        public void gameOverRed() {
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+            for (int i = 0; i < requiredPipes; i++) {
+                ImageView thumb = (ImageView) requierdBlocksLayout.getChildAt(i);
+                thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb_red);
+            }
+        }
+
 
         private void updateDisplay() {
             LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
@@ -125,28 +149,99 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             imageButtonLayoutParams.weight = 1f;
             imageButtonLayoutParams.gravity = Gravity.LEFT;
 
-
             requierdBlocksLayout.removeAllViews();
 
             for (int i = 0; i < requiredPipes; i++) {
                 ImageView thumb = new ImageView(MainActivity.this);
                 thumb.setLayoutParams(imageButtonLayoutParams);
-                thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb);
+                thumb.setImageResource(R.drawable.requierd_start_anim);
                 thumb.setPadding(4, 0, 4, 0);
                 thumb.setForegroundGravity(Gravity.LEFT);
                 requierdBlocksLayout.addView(thumb);
 
+
             }
+            requierdBlocks.animateRedStart();
+
         }
 
         public void DecrementAmount() {
             requiredPipes--;
-            if (requiredPipes >= 0) {
-                LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+            LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+            int mInterval = 40; // 5 seconds by default, can be changed later
+//            final int count = 0;
+            final Handler mHandler = new Handler();
+
+
+            Runnable repeat = new Runnable() {
+                @Override
+                public void run() {
+//                    for (int i=0; i<25; i++) {
+
+                        LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+
+                        LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(65, 65);
+                        ImageView thumb = new ImageView(MainActivity.this);
+                        thumb.setLayoutParams(imageButtonLayoutParams);
+                        thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb_green);
+                        thumb.setPadding(4, 0, 4, 0);
+                        thumb.setForegroundGravity(Gravity.LEFT);
+                        requierdBlocksLayout.addView(thumb);
+
+                }
+            };
+
+
+            if (requiredPipes > 0) {
                 requierdBlocksLayout.removeViewAt(0);
+            } else if (requiredPipes == 0) {
+                for (int i = 0; i < 25; i++)
+                    mHandler.postDelayed(repeat, mInterval * i);
+            }
+
+
+
+
+
+
+
             }
         }
-    }
+
+
+
+
+
+
+
+
+//                final Handler handler = new Handler();
+//                final Runnable r = new Runnable() {
+//                    public void run() {
+//                        LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
+//
+//                        LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(65, 65);
+//                        ImageView thumb = new ImageView(MainActivity.this);
+//                        thumb.setLayoutParams(imageButtonLayoutParams);
+//                        thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb_green);
+//                        thumb.setPadding(4, 0, 4, 0);
+//                        thumb.setForegroundGravity(Gravity.LEFT);
+//                        requierdBlocksLayout.addView(thumb);
+//                    }
+//                };
+//                for (int i = 0; i < 25; i++) {
+//
+//                    handler.postDelayed(r, 3500);
+//                }
+
+
+
+
+
+
+
+
+
 
     public class BoxButton extends ImageButton {
         Pipe.PipeType _type = null;
@@ -541,6 +636,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             case FOUND_NEXT_PIPE:
                 break;
             case GAMEOVER:
+                requierdBlocks.gameOverRed();
 
                 this.GameOverDialog(IsRecord(gameBoard.getTotalScore()));
 
@@ -589,6 +685,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         }
     }
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -617,6 +714,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         DisplayGame();
 
         ImageButton fastForward = findViewById(R.id.fast_forward_button);
+        fastForward.setSoundEffectsEnabled(false);
+
         fastForward.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -746,8 +845,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 //        stopService(music);
 
         super.onPause();
-        mServ.pauseMusic();
-
+        if (mServ != null) {
+            mServ.pauseMusic();
+        }
     PauseGame();
     }
 
@@ -811,6 +911,7 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             }
         }
 
+
         requierdBlocks.setNewRequiredAmount(gameBoard.getLeftPipesToComplete());
         requierdBlocks.updateDisplay();
 
@@ -829,15 +930,19 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         MediaPlayer bellNewGame = MediaPlayer.create(MainActivity.this, R.raw.bell2);
         bellNewGame.start();
 
+        if (gameBoard.getLevelNumber() == 0) {
+            firstMoveFlicker();
+        }
 
 
-        //update UI with number of required pipes
+        //update UI with number of requierd_game_over pipes
         requierdBlocks.setNewRequiredAmount(gameBoard.getCurrentLevel().getRequiredPipeLength());
-        requierdBlocks.updateDisplay();
+//        requierdBlocks.updateDisplay();
         levelSpeedPerFrame = gameBoard.getCurrentLevel().getFlowTimeInPipe();
-
         DisplayGame();
         startGameTimer();
+        requierdBlocks.animateRedStart();
+
     }
 
     public void PauseGame() {
@@ -1297,6 +1402,9 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     }
 
     public boolean IsRecord(int score) {
+        if (score == 50) {
+            return false;
+        }
 
         List<ScoreRecord> records = ScoresTable.getAllScores();
         if (records.size() < 5) {
@@ -1311,5 +1419,33 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
         return false;
     }
 
+    public void firstMoveFlicker() {
+        Pipe firstPipe = gameBoard.getFirstPipe();
+        Pipe.Directions directionNext = firstPipe.getFlowDirection();
+
+        BoxButton firstBox = getBoxFromPipe(firstPipe);
+        BoxButton secondBox = null;
+
+        switch (firstPipe.getFlowDirection()) {
+
+
+            case UP:
+                secondBox = getBoxFromPoint(new Point(firstBox.getPoint().getX(), firstBox.getPoint().getY() + 1));
+                break;
+            case DOWN:
+                secondBox = getBoxFromPoint(new Point(firstBox.getPoint().getX(), firstBox.getPoint().getY() - 1));
+                break;
+            case LEFT:
+                secondBox = getBoxFromPoint(new Point(firstBox.getPoint().getX() - 1, firstBox.getPoint().getY()));
+                break;
+            case RIGHT:
+                secondBox = getBoxFromPoint(new Point(firstBox.getPoint().getX() + 1, firstBox.getPoint().getY()));
+                break;
+        }
+
+        secondBox.setBackgroundResource(R.drawable.box_flicker);
+        AnimationDrawable anim = (AnimationDrawable) secondBox.getBackground();
+        anim.start();
+    }
 
 }
