@@ -18,9 +18,6 @@ public class MusicService extends Service  implements MediaPlayer.OnErrorListene
     }
 
     public class ServiceBinder extends Binder {
-        MusicService getService() {
-            return MusicService.this;
-        }
     }
 
     @Override
@@ -56,27 +53,6 @@ public class MusicService extends Service  implements MediaPlayer.OnErrorListene
     public int onStartCommand(Intent intent, int flags, int startId) {
         mPlayer.start();
         return START_STICKY;
-    }
-
-    public void pauseMusic() {
-        if (mPlayer.isPlaying()) {
-            mPlayer.pause();
-            length = mPlayer.getCurrentPosition();
-
-        }
-    }
-
-    public void resumeMusic() {
-        if (mPlayer.isPlaying() == false) {
-            mPlayer.seekTo(length);
-            mPlayer.start();
-        }
-    }
-
-    public void stopMusic() {
-        mPlayer.stop();
-        mPlayer.release();
-        mPlayer = null;
     }
 
     @Override

@@ -79,35 +79,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
      * background music services
      */
 
-    private boolean mIsBound = false;
-    private boolean misPlaying = false;
-    private MusicService mServ;
-    private ServiceConnection Scon = new ServiceConnection() {
-
-        public void onServiceConnected(ComponentName name, IBinder
-                binder) {
-            mServ = ((MusicService.ServiceBinder) binder).getService();
-        }
-
-        public void onServiceDisconnected(ComponentName name) {
-            mServ = null;
-        }
-    };
-
-    void doBindService() {
-        bindService(new Intent(this, MusicService.class),
-                Scon, Context.BIND_AUTO_CREATE);
-        mIsBound = true;
-    }
-
-    void doUnbindService() {
-        if (mIsBound) {
-            unbindService(Scon);
-            mIsBound = false;
-        }
-    }
-
-
     public class RequierdBoxesBar {
         int requiredPipes = 0;
 
@@ -158,8 +129,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 thumb.setPadding(4, 0, 4, 0);
                 thumb.setForegroundGravity(Gravity.LEFT);
                 requierdBlocksLayout.addView(thumb);
-
-
             }
             requierdBlocks.animateRedStart();
 
@@ -169,15 +138,11 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             requiredPipes--;
             LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
             int mInterval = 40; // 5 seconds by default, can be changed later
-//            final int count = 0;
             final Handler mHandler = new Handler();
-
 
             Runnable repeat = new Runnable() {
                 @Override
                 public void run() {
-//                    for (int i=0; i<25; i++) {
-
                         LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
 
                         LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(65, 65);
@@ -199,49 +164,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     mHandler.postDelayed(repeat, mInterval * i);
             }
 
-
-
-
-
-
-
             }
-        }
-
-
-
-
-
-
-
-
-//                final Handler handler = new Handler();
-//                final Runnable r = new Runnable() {
-//                    public void run() {
-//                        LinearLayout requierdBlocksLayout = findViewById(R.id.requierd_blocks);
-//
-//                        LinearLayout.LayoutParams imageButtonLayoutParams = new LinearLayout.LayoutParams(65, 65);
-//                        ImageView thumb = new ImageView(MainActivity.this);
-//                        thumb.setLayoutParams(imageButtonLayoutParams);
-//                        thumb.setImageResource(R.drawable.ic_requierd_pipe_thumb_green);
-//                        thumb.setPadding(4, 0, 4, 0);
-//                        thumb.setForegroundGravity(Gravity.LEFT);
-//                        requierdBlocksLayout.addView(thumb);
-//                    }
-//                };
-//                for (int i = 0; i < 25; i++) {
-//
-//                    handler.postDelayed(r, 3500);
-//                }
-
-
-
-
-
-
-
-
-
+    }
 
     public class BoxButton extends ImageButton {
         Pipe.PipeType _type = null;
@@ -524,7 +448,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
                     this.setScaleY(-1);
 
-
                     break;
                 case TOP_RIGHT: //TODO FINISH THIS
                     this.setImageResource(R.drawable.corner_animation);
@@ -598,8 +521,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
             };
             this.setImageDrawable(animation.SkipAnimation());
         }
-
-
     }
 
     @Override
@@ -690,11 +611,6 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Intent music = new Intent();
-        music.setClass(this, MusicService.class);
-        startService(music);
-        misPlaying = true;
-
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             Window w = getWindow();
@@ -827,10 +743,8 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
     @Override
     protected void onResume() {
         super.onResume();
-        if (!misPlaying) {
-            mServ.resumeMusic();
-            misPlaying = true;
-        }
+        Intent serviceIntent = new Intent(this, MusicService.class);
+        startService(serviceIntent);
 
         //check if the main dialog already displayed
         if (mainAlertDialog == null || mainAlertDialog.isShowing() == false) {
@@ -841,14 +755,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
 
     @Override
     protected void onPause() {
-//        Intent music = new Intent(MainActivity.this, MusicService.class);
-//        stopService(music);
-
         super.onPause();
-        if (mServ != null) {
-            mServ.pauseMusic();
-        }
-    PauseGame();
+        Intent serviceIntent = new Intent(this, MusicService.class);
+        stopService(serviceIntent);
+        PauseGame();
     }
 
     public void InitializeBoard() {
