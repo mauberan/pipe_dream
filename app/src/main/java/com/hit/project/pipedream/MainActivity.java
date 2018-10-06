@@ -539,20 +539,13 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                     public void run() {
                         Pipe currentPipe = gameBoard.getCurrentPipe();
                         BoxButton box = getBoxFromPipe(currentPipe);
-
                         box.AnimateFlow(currentPipe.getFlowDirection(), currentPipe.getNumOfVisits());
-//                        if (gameBoard.getCurrentPipe() != gameBoard.getFirstPipe()) {
-//                            MediaPlayer point_sound = MediaPlayer.create(MainActivity.this, R.raw.point_sound);
-//                            point_sound.start();
-//                        }
-
                     }
                 });
 
                 System.out.println(String.format("pipe location:%s flow direction:%s", gameBoard.getCurrentPipe().getPosition(), gameBoard.getCurrentPipe().getFlowDirection()));
                 UpdatePointBar();
                 requierdBlocks.DecrementAmount();
-
                 break;
             case FOUND_NEXT_PIPE:
                 break;
@@ -568,11 +561,10 @@ public class MainActivity extends Activity implements View.OnClickListener , Obs
                 }
 
                 break;
+            case NO_MORE_LEVELS:
             case NEXT_LEVEL:
                 LevelDoneDialog();
-
-            case NO_MORE_LEVELS:
-
+                break;
         }
     }
 

@@ -6,23 +6,23 @@ public class Level implements Serializable {
 
 
     public static Level[] Levels = {
-            new Level(4,12,50,LevelDifficulty.EASY,60),
-            new Level(4,8,50,LevelDifficulty.EASY,60),
-            new Level(8,8,50,LevelDifficulty.EASY,60),
-            new Level(8,6,50,LevelDifficulty.EASY,40),
-            new Level(8,6,50,LevelDifficulty.EASY,40),
-            new Level(8,4,100,LevelDifficulty.MEDIUM,40),
-            new Level(8,4,100,LevelDifficulty.MEDIUM,40),
-            new Level(8,2,100,LevelDifficulty.MEDIUM,30),
-            new Level(8,2,100,LevelDifficulty.MEDIUM,30),
-            new Level(10,2,100,LevelDifficulty.MEDIUM,30),
+            new Level(7,7,50,LevelDifficulty.EASY,40),
+            new Level(7,7,50,LevelDifficulty.EASY,40),
+            new Level(10,5,50,LevelDifficulty.EASY,40),
+            new Level(10,5,50,LevelDifficulty.EASY,35),
+            new Level(10,5,50,LevelDifficulty.EASY,35),
+            new Level(10,4,100,LevelDifficulty.MEDIUM,30),
+            new Level(13,4,100,LevelDifficulty.MEDIUM,30),
+            new Level(13,3,100,LevelDifficulty.MEDIUM,30),
+            new Level(14,3,100,LevelDifficulty.MEDIUM,30),
+            new Level(14,3,100,LevelDifficulty.MEDIUM,30),
 
 
-            new Level(20,10,120,LevelDifficulty.HARD,30),
-            new Level(20,10,120,LevelDifficulty.HARD,30),
-            new Level(20,10,120,LevelDifficulty.HARD,30),
-            new Level(20,10,120,LevelDifficulty.HARD,30),
-            new Level(20,10,120,LevelDifficulty.HARD,30)};
+            new Level(16,4,120,LevelDifficulty.HARD,30),
+            new Level(20,4,120,LevelDifficulty.HARD,30),
+            new Level(22,4,120,LevelDifficulty.HARD,30),
+            new Level(30,4,120,LevelDifficulty.HARD,30),
+            new Level(35,4,120,LevelDifficulty.HARD,30)};
 
     public enum LevelDifficulty {
         EASY, MEDIUM, HARD
