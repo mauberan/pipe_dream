@@ -22,6 +22,7 @@ import com.hit.project.pipedream.data.ScoreRecord;
 import com.hit.project.pipedream.data.ScoresTable;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -76,6 +77,10 @@ public class ActivityScores extends Activity {
         RelativeLayout.LayoutParams scoreParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
         scoreParams.addRule(RelativeLayout.BELOW, title.getId());
 
+        LinearLayout.LayoutParams scoreLinearParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        LinearLayout recordsBlock = new LinearLayout(ActivityScores.this);
+        recordsBlock.setOrientation(LinearLayout.VERTICAL);
+
         int numOfScores;
         List<ScoreRecord> records = ScoresTable.getAllScores();
         if (records.size() < 5) {
@@ -84,13 +89,10 @@ public class ActivityScores extends Activity {
         else {
             numOfScores = 5;
         }
-        TextView lastScore = null;
+
         for (int i = 0; i < numOfScores; i++) {
             TextView score = new TextView(ActivityScores.this);
             ScoreRecord record = records.get(i);
-
-
-
 
             if (record != null) {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd/MM/YYYY");
@@ -103,21 +105,23 @@ public class ActivityScores extends Activity {
                 score.setGravity(Gravity.LEFT);
                 score.setPadding(0, 0, 0, 30);
             }
-            scoreParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
-            if (lastScore == null) {
-                scoreParams.addRule(RelativeLayout.BELOW, title.getId());
+            recordsBlock.addView(score);
 
-            }
-            else {
-                scoreParams.addRule(RelativeLayout.BELOW, lastScore.getId());
-            }
-            score.setId(i);
-            score.setLayoutParams(scoreParams);
-            relativeLayout.addView(score);
+//            score.setId(i);
+//            scoreParams = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,RelativeLayout.LayoutParams.WRAP_CONTENT);
+//            if (lastScore == null) {
+//                scoreParams.addRule(RelativeLayout.BELOW, title.getId());
+//
+//            }
+//            else {
+//                scoreParams.addRule(RelativeLayout.BELOW, i);
+//            }
+            score.setLayoutParams(scoreLinearParams);
 
-            lastScore = score;
         }
+        recordsBlock.setLayoutParams(scoreParams);
 
+        relativeLayout.addView(recordsBlock);
 
 
 

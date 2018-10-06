@@ -5,21 +5,24 @@ import java.io.Serializable;
 public class Level implements Serializable {
 
 
-    public static Level[] Levels = {new Level(5,10,50,LevelDifficulty.EASY,60),
-            new Level(4,10,50,LevelDifficulty.EASY,60),
-            new Level(5,10,50,LevelDifficulty.EASY,60),
-            new Level(6,10,50,LevelDifficulty.EASY,60),
-            new Level(7,10,50,LevelDifficulty.EASY,60),
-            new Level(8,10,100,LevelDifficulty.MEDIUM,40),
-            new Level(8,10,100,LevelDifficulty.MEDIUM,40),
-            new Level(9,10,100,LevelDifficulty.MEDIUM,40),
-            new Level(9,10,100,LevelDifficulty.MEDIUM,40),
-            new Level(10,10,100,LevelDifficulty.MEDIUM,40),
-            new Level(11,10,120,LevelDifficulty.HARD,30),
-            new Level(11,10,120,LevelDifficulty.HARD,30),
-            new Level(12,10,120,LevelDifficulty.HARD,30),
-            new Level(12,10,120,LevelDifficulty.HARD,30),
-            new Level(13,10,120,LevelDifficulty.HARD,30)};
+    public static Level[] Levels = {
+            new Level(4,12,50,LevelDifficulty.EASY,60),
+            new Level(4,8,50,LevelDifficulty.EASY,60),
+            new Level(8,8,50,LevelDifficulty.EASY,60),
+            new Level(8,6,50,LevelDifficulty.EASY,40),
+            new Level(8,6,50,LevelDifficulty.EASY,40),
+            new Level(8,4,100,LevelDifficulty.MEDIUM,40),
+            new Level(8,4,100,LevelDifficulty.MEDIUM,40),
+            new Level(8,2,100,LevelDifficulty.MEDIUM,30),
+            new Level(8,2,100,LevelDifficulty.MEDIUM,30),
+            new Level(10,2,100,LevelDifficulty.MEDIUM,30),
+
+
+            new Level(20,10,120,LevelDifficulty.HARD,30),
+            new Level(20,10,120,LevelDifficulty.HARD,30),
+            new Level(20,10,120,LevelDifficulty.HARD,30),
+            new Level(20,10,120,LevelDifficulty.HARD,30),
+            new Level(20,10,120,LevelDifficulty.HARD,30)};
 
     public enum LevelDifficulty {
         EASY, MEDIUM, HARD
