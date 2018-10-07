@@ -1,8 +1,9 @@
 package com.hit.project.pipedream.data;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class ScoreRecord {
+public class ScoreRecord implements Serializable {
 
     int _score;
     String _nickname;
